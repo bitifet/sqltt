@@ -1,0 +1,26 @@
+{
+  "name": "sqlst",
+  "version": "0.0.0",
+  "description": "SQL String-Template tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitifet/sqlst.git"
+  },
+  "keywords": [
+    "SQL",
+    "orm",
+    "string",
+    "template",
+    "database"
+  ],
+  "author": "Joan Miquel Torres <jmtorres@112ib.com>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/bitifet/sqlst/issues"
+  },
+  "homepage": "https://github.com/bitifet/sqlst#readme"
+}
