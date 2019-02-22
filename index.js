@@ -23,33 +23,44 @@ class sqlst { // Sql Template
 
         function compiler(parts, ...placeholders) {//{{{
             const sql = [];
+            const literals = this;
 
-            for (let i=0; i<parts.length; i++) {
-                sql.push(parts[i]);
-                const plh = placeholders[i];
+            function interpolate(plh, i, bindings = {}) {//{{{
                 switch (typeof plh) {
                     case "string":
-                        sql.push(engine.indexer(me.argIdx[plh], plh));
-                        break;
+                        return (
+                            literals[plh] === undefined
+                                ? engine.indexer(me.argIdx[plh], plh)
+                                : literals[plh]
+                        );
                     case "function": // Template source:
-                        sql.push(plh(compiler).sql);
-                        break;
+                        return plh(compiler.bind(bindings)).sql;
                     case "object":   // Actual sqlst instance:
-                        if ("function" == typeof plh.getSource) {
-                            sql.push(plh.getSource()(compiler).sql);
-                            break;
+                        if (
+                            plh instanceof Array
+                        ) {
+                            return interpolate(plh[0], i, plh[1]);
+                        } else if (
+                            "function" == typeof plh.getSource
+                        ) {
+                            return plh.getSource()(compiler.bind(bindings)).sql;
                         };
                     case "undefined":
-                        if (i == placeholders.length) break; // No placeholder at the very end.
+                        if (i == placeholders.length) return ""; // No placeholder at the very end.
                     default:
                         throw new Error("Wrong placehloder type: " + typeof plh);
                 };
+            };//}}}
+
+            for (let i=0; i<parts.length; i++) {
+                sql.push(parts[i]);
+                sql.push(interpolate(placeholders[i], i));
             };
 
             return sql.join("");
         };//}}}
 
-        return engine.wrapper.bind(me)(me.source(compiler).sql);
+        return engine.wrapper.bind(me)(me.source(compiler.bind({})).sql);
     };//}}}
     args(data = {}) {//{{{
         return this.argList.map(k=>data[k] || null);
