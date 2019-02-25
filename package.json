@@ -1,14 +1,14 @@
 {
-  "name": "sqlst",
-  "version": "0.0.0",
-  "description": "SQL String-Template tool",
+  "name": "sqltt",
+  "version": "0.0.1",
+  "description": "SQL Tagged Templates",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bitifet/sqlst.git"
+    "url": "git+https://github.com/bitifet/sqltt.git"
   },
   "keywords": [
     "SQL",
@@ -20,7 +20,7 @@
   "author": "Joan Miquel Torres <jmtorres@112ib.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/bitifet/sqlst/issues"
+    "url": "https://github.com/bitifet/sqltt/issues"
   },
-  "homepage": "https://github.com/bitifet/sqlst#readme"
+  "homepage": "https://github.com/bitifet/sqltt#readme"
 }
