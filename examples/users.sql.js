@@ -1,7 +1,7 @@
 "use strict";
-const sqlst = require("../");
+const sqltt = require("../");
 
-const q = new sqlst($ => ({
+const q = new sqltt($ => ({
     sql: $`
         --@@sql@@
         select *

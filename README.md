@@ -122,8 +122,8 @@ Template Examples
 ### Simple template file
 
 ```sql
-const sqlst = require("sqltt");
-const q = new sqlst($ => ({
+const sqltt = require("sqltt");
+const q = new sqltt($ => ({
     // args: ["company_name", "company_dept"], // Specify parameters order
                                                // (optional)
     sql: $`
@@ -172,8 +172,8 @@ single file and only instantiate those we are actually going to use.
 ### Full example with nested templates
 
 ```sql
-const sqlst = require("sqltt");
-const q = new sqlst($ => ({
+const sqltt = require("sqltt");
+const q = new sqltt($ => ({
     sql: $`
         --@@sql@@
         with usersCte as (
