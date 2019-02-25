@@ -63,6 +63,9 @@ class sqlst { // Sql Template
         return engine.wrapper.bind(me)(me.source(compiler.bind({})).sql);
     };//}}}
     args(data = {}) {//{{{
+        if (data instanceof Array) return data;
+            // Accept regular positional parameters too
+            // (No check is made in this case).
         return this.argList.map(k=>data[k] || null);
     };//}}}
 }

@@ -1,6 +1,6 @@
 {
   "name": "sqltt",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SQL Tagged Templates",
   "main": "index.js",
   "scripts": {
@@ -15,6 +15,7 @@
     "orm",
     "string",
     "template",
+    "TaggedTemplates",
     "database"
   ],
   "author": "Joan Miquel Torres <jmtorres@112ib.com>",

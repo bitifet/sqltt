@@ -81,7 +81,7 @@ Usage Example
 
 >
 **NOTE:** All examples are for *PostgreSQL* engines. Either case, if engine is
-not specified, a "generic" one gets used (which nowadays is exactly the same of
+not specified, a "generic" one gets used (which nowadays is exactly the same as
 Postgres one).
 >
 
@@ -101,6 +101,14 @@ db.queryRows(
         // (Unused arguments will be automatically ignored)
 );
 ```
+
+> **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
+> Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
+> so we could simply have wrote:
+> ```sql
+> db.queryRows(myQuery, inputData);
+> ```
+
 
 ### From console
 
