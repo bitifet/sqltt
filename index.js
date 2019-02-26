@@ -2,6 +2,40 @@
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
 
+function resolveEngine(eng) {//{{{
+
+    const isCli = (eng || "").match(/^(?:(\w+)_)?cli$/);
+    let cliArgs;
+    if (isCli) cliArgs = process.argv.slice(2);
+
+    if (eng == "cli") { 
+        let requestedEngine = (
+            (cliArgs[0] || "").match(/^--(\w+)$/)
+            || []
+        )[1];
+        if (requestedEngine) {
+            cliArgs.shift();
+            eng = requestedEngine+"_cli";
+        };
+
+
+    };
+
+    if (isCli && ! engines[eng]) {
+        console.error(
+            "-- Unknown/Unimplemented cli engine: "
+            + eng
+            + ". Using default..."
+        );
+        eng = "cli";
+    };
+
+    const engine = engines[eng];
+    if (! engine) throw new Error ("Unknown database engine: " + eng);
+
+    return [engine, cliArgs];
+};//}}}
+
 class sqlst { // Sql Template
     constructor(sourceTpl, options = {}) {//{{{
         const me = this;
@@ -18,8 +52,8 @@ class sqlst { // Sql Template
     };//}}}
     sql(eng = "default") {//{{{
         const me = this;
-        const engine = engines[eng];
-        if (! engine) throw new Error ("Unknown database engine: " + eng);
+
+        const [engine, args] = resolveEngine(eng);
 
         function compiler(parts, ...placeholders) {//{{{
             const sql = [];
@@ -60,7 +94,7 @@ class sqlst { // Sql Template
             return sql.join("");
         };//}}}
 
-        return engine.wrapper.bind(me)(me.source(compiler.bind({})).sql);
+        return engine.wrapper.bind(me)(me.source(compiler.bind({})).sql, args);
     };//}}}
     args(data = {}) {//{{{
         if (data instanceof Array) return data;

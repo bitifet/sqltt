@@ -99,7 +99,7 @@ db.queryRows(
     myQuery.sql("postgresql")
     , myQuery.args(inputData)
         // (Unused arguments will be automatically ignored)
-);
+).then(rows=>console.log(rows);
 ```
 
 > **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
@@ -232,6 +232,11 @@ send me patches to include your improvements.
 
 TODO
 ----
+
+  * Implement argument *hooks*.
+    - I.e: {cli: {data: {jsonb_pretty(%) as %}}}
+
+  * Implement per-engine SQL alternatives
 
   * Improve this README file.
 
