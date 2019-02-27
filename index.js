@@ -21,6 +21,7 @@ function resolveEngine(eng) {//{{{
 
     };
 
+    let targetEng = eng;
     if (isCli && ! engines[eng]) {
         console.error(
             "-- Unknown/Unimplemented cli engine: "
@@ -33,7 +34,7 @@ function resolveEngine(eng) {//{{{
     const engine = engines[eng];
     if (! engine) throw new Error ("Unknown database engine: " + eng);
 
-    return [engine, cliArgs];
+    return [engine, eng, targetEng, cliArgs];
 };//}}}
 
 class sqlst { // Sql Template
@@ -45,15 +46,29 @@ class sqlst { // Sql Template
         me.argList = hlp.getArguments(me.source);
         me.argIdx = hlp.indexArgs(me.argList);
 
+        const {
+            hooks
+        } = me.source(()=>{})
+        me.hooks = hooks;
+
     };//}}}
     getSource() {//{{{
         const me = this;
         return me.source;
     };//}}}
-    sql(eng = "default") {//{{{
+    hookApply(eng, arg, rarg) {//{{{
+        const me = this;
+        const hook = me.hooks[arg];
+        if (! hook) return arg;
+        const hookt = typeof hook;
+        if (hookt == "function") return hook(rarg, eng) || rarg;
+        if (hookt == "string") return hook.replace(/%/g, rarg);
+        throw new Error ("Invalid hook type: " + hookt);
+    };//}}}
+    sql(engName = "default") {//{{{
         const me = this;
 
-        const [engine, args] = resolveEngine(eng);
+        const [engine, eng, targetEngine, args] = resolveEngine(engName);
 
         function compiler(parts, ...placeholders) {//{{{
             const sql = [];
@@ -62,8 +77,10 @@ class sqlst { // Sql Template
             function interpolate(plh, i, bindings = {}) {//{{{
                 switch (typeof plh) {
                     case "string":
-                        return (
-                            literals[plh] === undefined
+                        return me.hookApply(
+                            targetEngine
+                            , plh
+                            , literals[plh] === undefined
                                 ? engine.indexer(me.argIdx[plh], plh)
                                 : literals[plh]
                         );
@@ -73,6 +90,9 @@ class sqlst { // Sql Template
                         if (
                             plh instanceof Array
                         ) {
+                            if (typeof plh[0] == "string") {
+                                return me.hookApply(targetEngine, plh[0], plh[0]);
+                            };
                             return interpolate(plh[0], i, plh[1]);
                         } else if (
                             "function" == typeof plh.getSource

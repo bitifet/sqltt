@@ -19,6 +19,8 @@ Index
     * [Full example with nested templates](#full-example-with-nested-templates)
 * [Supported Database Engines](#supported-database-engines)
     * [Adding more Database Engines](#adding-more-database-engines)
+* [Advanced Features](#advanced-features)
+    * [Hooks](#hooks)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -229,6 +231,61 @@ If you are interested in adding more engines or improving existing ones, check
 `lib/engines.js` file (They're too easy to implement) and please, feel free to
 send me patches to include your improvements.
 
+
+Advanced Features
+-----------------
+
+### Hooks
+
+Hooks lets us to wrap arguments differently according to the actual engine.
+
+They consist on a function that takes the original string and the engine name.
+If this function returns a non falsy value, the argument is replaced by that in
+the query. Otherwise it remains untouched.
+
+>
+**NOTE:** Hooks can also be applied to non argument keywords. To do so we need
+to escape them as if it were real arguments and then wrap it as an array. This
+will avoid its interpolation as argument.
+>
+
+**Example:**
+
+```sql
+const sqltt = require("sqltt");
+const q = new sqltt($ => ({
+    hooks: {
+        // Prettier formatting on cli output:
+        json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
+        // Fix lack of implicit casting in Oracle:
+        fromTimestamp: (arg, eng) => eng.match(/^oracle/) && "TO_DATE("+arg+", 'yyyy/mm/dd')",
+    },
+    sql: $`
+        --@@sql@@
+        select ${["json_data"]}
+        from some_table
+        where some_column = ${"some_value"}
+        --@@/sql@@
+    `,
+}));
+module.exports = q;
+module.parent || console.log(q.sql('cli'));
+```
+
+There's a shorthand consisting in to simply specify an alternative string. In
+this case the replacement would be done inconditionally. But this could be
+helpful in case we want to manually enable/disable some tweaks without editing
+the actual SQL (just commenting in and out that hook).
+
+**Example:**
+
+```sql
+        // If we wanted to apply this hook to all engines:
+        json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
+        // We could have written it as:
+        json_data: "jsonb_pretty(%) as %",
+
+```
 
 TODO
 ----
