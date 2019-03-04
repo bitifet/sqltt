@@ -21,6 +21,7 @@ Index
     * [Adding more Database Engines](#adding-more-database-engines)
 * [Advanced Features](#advanced-features)
     * [Hooks](#hooks)
+    * [SQL Alternatives](#sql-alternatives)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -286,6 +287,42 @@ the actual SQL (just commenting in and out that hook).
         json_data: "jsonb_pretty(%) as %",
 
 ```
+
+
+### SQL Alternatives
+
+If it is impossible or unreasonable to use the same sql structure for some
+database engines, *sqltt* allows to specify a completely different sql source
+for given database through *altsql* property.
+
+**Example:**
+
+```javascript
+const sqltt = require("sqltt");
+const q = new sqltt({
+    sql: $=>$`
+        --@@sql@@
+        /* Regular SQL */
+        --@@/sql@@
+    `,
+    altsql: {
+        $=>$`
+            --@@sql@@
+            /* Oracle specific SQL */
+            --@@/sql@@
+        `
+    }
+});
+module.exports = q;
+module.parent || console.log(q.sql('cli'));
+```
+
+>
+**NOTE:** Argument names and order are checked to be the same in all query
+alternatives to ensure its consistency so using *args* property to fix their
+order is hardly encouraged.
+>
+
 
 TODO
 ----

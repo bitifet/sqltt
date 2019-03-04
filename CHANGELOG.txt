@@ -1,6 +1,8 @@
 CHANGELOG.txt
 =============
 
+v0.1.0 - Cleaner template format and SQL alternatives
+
     Cleaner engine resolution.
 
     Hooks implementation.
@@ -13,6 +15,7 @@ CHANGELOG.txt
 
     Added this CHANGELOG.txt file.
 
+    Implemented SQL "alternatives" (altsql template property).
 
 v0.0.2 - Few improvements for better ppooled-pg integration.
 
