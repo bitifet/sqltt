@@ -1,0 +1,35 @@
+CHANGELOG.txt
+=============
+
+    Cleaner engine resolution.
+
+    Hooks implementation.
+
+    Move to non weird template format:
+      - { sql: $=>$`some sql`, /* Other parameters... /* }
+    
+    Backward compatibility for old-style templates (Will be kept until next
+    major version number increasing).
+
+    Added this CHANGELOG.txt file.
+
+
+v0.0.2 - Few improvements for better ppooled-pg integration.
+
+    Modifiend args() method in order to accept an already prepared arguments
+    array (facilitating to use it as simple arguments formatter/checker
+    accepting both formats).
+
+    Updated README file to annotate (upcoming) ppooled-pg 0.3.0 compatibility.
+
+    Other minor fixes.
+
+
+v0.0.1 - Added README file and final project name.
+
+    Initial implementation.
+      - Multi Engine support.
+      - Cli "special" engines.
+      - Nested queries with smart arguments handling.
+      - Example templates
+
