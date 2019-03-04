@@ -39,7 +39,7 @@ function resolveEngine(engName) {//{{{
     return [eng, targettedEngName, engineFlavour, cliArgs];
 };//}}}
 
-class sqlst { // Sql Template
+class sqltt { // Sql Template
     constructor(sourceTpl, options = {}) {//{{{
         const me = this;
         me.loadTemplate(sourceTpl);
@@ -82,7 +82,7 @@ class sqlst { // Sql Template
                         );
                     case "function": // Template source:
                         return plh.sql(compiler.bind(bindings));
-                    case "object":   // Actual sqlst instance:
+                    case "object":   // Actual sqltt instance:
                         if (
                             plh instanceof Array
                         ) {
@@ -136,7 +136,7 @@ class sqlst { // Sql Template
                                 ? plh
                                 : null
                         );
-                    case "object":   // Actual sqlst instance:
+                    case "object":   // Actual sqltt instance:
                         if (plh instanceof Array) {
                             if (typeof plh[0] == "string") return null;
                                 // Allow ["foo"] to apply hooks avoiding argument interpolation.
@@ -210,7 +210,15 @@ class sqlst { // Sql Template
         };
 
     };//}}}
+    concat(str) {//{{{
+        const me = this;
+        return Object.assign(
+            Object.create(Object.getPrototypeOf(me))
+            , me
+            , { sql: (...args) => me.sql(...args) + str }
+        );
+    };//}}}
 }
 
-module.exports = sqlst;
+module.exports = sqltt;
 

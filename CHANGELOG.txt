@@ -1,6 +1,8 @@
 CHANGELOG.txt
 =============
 
+v0.2.0 - Implemented .concat() method.
+
 v0.1.0 - Cleaner format, SQL alternatives and caché.
 
     Cleaner engine resolution.

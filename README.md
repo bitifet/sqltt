@@ -22,6 +22,7 @@ Index
 * [Advanced Features](#advanced-features)
     * [Hooks](#hooks)
     * [SQL Alternatives](#sql-alternatives)
+    * [String Concatenation](#string-concatenation)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -77,6 +78,10 @@ Features
     - By using .sql extension instead of .js (despite the little js overhead).
     - By `-- @@/sql@@`and `-- @@/sql@@` comments [in
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
+
+  * Query Caché:
+    - SQL for every database are generated and cached the first time they're
+      required and then always consumed from caché.
 
 
 Usage Example
@@ -323,6 +328,28 @@ alternatives to ensure its consistency so using *args* property to fix their
 order is hardly encouraged.
 >
 
+
+### String Concatenation
+
+*sqltt* template instances provide a `.concat(<string>)` method returning a new
+instance whose `sql(<whatever>)` method will return provided string
+concatenated at the end.
+
+This is useful to add simple clauses such as `limit`, `order by` or `group by`
+from our application logic.
+
+**Example:**
+
+```javascript
+const myQuery = require('path/to/myQuery.sql.js')
+    .concat("limit 100")
+;
+db.queryRows(
+    myQuery.sql("postgresql")
+    , myQuery.args(inputData) // or simply "inputData" if db is sqltt aware*
+        // (*) Such as ppooled-pg
+).then(rows=>console.log(rows);
+```
 
 TODO
 ----
