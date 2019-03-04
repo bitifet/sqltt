@@ -44,6 +44,7 @@ class sqlst { // Sql Template
         const me = this;
         me.loadTemplate(sourceTpl);
         me.checkTemplate();
+        me.sqlCache = {};
     };//}}}
     getSource(engFlav) {//{{{
         const me = this;
@@ -62,6 +63,7 @@ class sqlst { // Sql Template
     };//}}}
     sql(engName = "default") {//{{{
         const me = this;
+        if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
         const sqlt = me.getSource(engineFlavour).sql;
         function compiler(parts, ...placeholders) {//{{{
@@ -107,7 +109,9 @@ class sqlst { // Sql Template
 
             return sql.join("");
         };//}}}
-        return eng.wrapper.bind(me)(sqlt(compiler.bind({})), args);
+        const outSql = eng.wrapper.bind(me)(sqlt(compiler.bind({})), args);
+        me.sqlCache[engName] = outSql;
+        return outSql;
     };//}}}
     args(data = {}) {//{{{
         if (data instanceof Array) return data;
