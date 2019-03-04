@@ -1,8 +1,8 @@
 "use strict";
 const sqltt = require("../");
 
-const q = new sqltt($ => ({
-    sql: $`
+const q = new sqltt({
+    sql: $=>$`
         --@@sql@@
         select *
         from privileges
@@ -10,7 +10,7 @@ const q = new sqltt($ => ({
         and privilege_name = ${"privilege_name"}
         --@@/sql@@
     `,
-}));
+});
 
 
 module.exports = q;

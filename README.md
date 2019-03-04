@@ -131,12 +131,12 @@ Template Examples
 
 ### Simple template file
 
-```sql
+```javascript
 const sqltt = require("sqltt");
-const q = new sqltt($ => ({
+const q = new sqltt({
     // args: ["company_name", "company_dept"], // Specify parameters order
                                                // (optional)
-    sql: $`
+    sql: $=>$`
         --@@sql@@
         select *
         from users
@@ -144,7 +144,7 @@ const q = new sqltt($ => ({
         and company_dept = ${"company_dept"}
         --@@/sql@@
     `,
-}));
+});
 
 // Exports query to be used as library:
 module.exports = q;
@@ -156,7 +156,7 @@ module.parent || console.log(q.sql('cli'));
 
 ### Simpler template example with no boilerplate
 
-```sql
+```javascript
 module.exports = $ => ({
     sql: $`
         --@@sql@@
@@ -181,10 +181,10 @@ single file and only instantiate those we are actually going to use.
 
 ### Full example with nested templates
 
-```sql
+```javascript
 const sqltt = require("sqltt");
-const q = new sqltt($ => ({
-    sql: $`
+const q = new sqltt({
+    sql: $=>$`
         --@@sql@@
         with usersCte as (
             ${
@@ -202,7 +202,7 @@ const q = new sqltt($ => ({
         ) as loggeableUsers
         --@@/sql@@
     `,
-}));
+});
 module.exports = q;
 module.parent || console.log(q.sql('cli'));
 ```
@@ -251,23 +251,23 @@ will avoid its interpolation as argument.
 
 **Example:**
 
-```sql
+```javascript
 const sqltt = require("sqltt");
-const q = new sqltt($ => ({
+const q = new sqltt({
     hooks: {
         // Prettier formatting on cli output:
         json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
         // Fix lack of implicit casting in Oracle:
         fromTimestamp: (arg, eng) => eng.match(/^oracle/) && "TO_DATE("+arg+", 'yyyy/mm/dd')",
     },
-    sql: $`
+    sql: $=>$`
         --@@sql@@
         select ${["json_data"]}
         from some_table
         where some_column = ${"some_value"}
         --@@/sql@@
     `,
-}));
+});
 module.exports = q;
 module.parent || console.log(q.sql('cli'));
 ```
@@ -279,7 +279,7 @@ the actual SQL (just commenting in and out that hook).
 
 **Example:**
 
-```sql
+```javascript
         // If we wanted to apply this hook to all engines:
         json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
         // We could have written it as:
@@ -289,9 +289,6 @@ the actual SQL (just commenting in and out that hook).
 
 TODO
 ----
-
-  * Implement argument *hooks*.
-    - I.e: {cli: {data: {jsonb_pretty(%) as %}}}
 
   * Implement per-engine SQL alternatives
 

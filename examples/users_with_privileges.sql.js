@@ -1,8 +1,8 @@
 "use strict";
 const sqltt = require("../");
 
-const q = new sqltt($ => ({
-    sql: $`
+const q = new sqltt({
+    sql: $=>$`
         --@@sql@@
         with usersCte as (
             ${
@@ -20,7 +20,7 @@ const q = new sqltt($ => ({
         ) as loggeableUsers
         --@@/sql@@
     `,
-}));
+});
 
 
 module.exports = q;

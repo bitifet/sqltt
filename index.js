@@ -37,20 +37,29 @@ function resolveEngine(eng) {//{{{
     return [engine, eng, targetEng, cliArgs];
 };//}}}
 
+function checkTemplate(inTpl) { // Backward Compatibility Hook{{{
+    if (typeof inTpl == "function") {
+        // Old Style template transpilation:
+        const outTpl = inTpl(()=>{});
+        if (typeof outTpl != "object") throw new Error (
+            "Wrong old-style template format"
+        );
+        outTpl.sql = $=>inTpl($).sql;
+        return checkTemplate(outTpl);
+    };
+    if (typeof inTpl.sql != "function") throw new Error (
+        "Wrong template format: sql must be a function."
+    );
+    return inTpl;
+};//}}}
+
 class sqlst { // Sql Template
     constructor(sourceTpl, options = {}) {//{{{
         const me = this;
-
-        me.source = sourceTpl;
-
+        me.source = checkTemplate(sourceTpl);
         me.argList = hlp.getArguments(me.source);
         me.argIdx = hlp.indexArgs(me.argList);
-
-        const {
-            hooks
-        } = me.source(()=>{})
-        me.hooks = hooks;
-
+        me.hooks = me.source.hooks || [];
     };//}}}
     getSource() {//{{{
         const me = this;
@@ -59,7 +68,7 @@ class sqlst { // Sql Template
     hookApply(eng, arg, rarg) {//{{{
         const me = this;
         const hook = me.hooks[arg];
-        if (! hook) return arg;
+        if (! hook) return rarg;
         const hookt = typeof hook;
         if (hookt == "function") return hook(rarg, eng) || rarg;
         if (hookt == "string") return hook.replace(/%/g, rarg);
@@ -85,7 +94,7 @@ class sqlst { // Sql Template
                                 : literals[plh]
                         );
                     case "function": // Template source:
-                        return plh(compiler.bind(bindings)).sql;
+                        return plh.sql(compiler.bind(bindings));
                     case "object":   // Actual sqlst instance:
                         if (
                             plh instanceof Array
@@ -97,7 +106,7 @@ class sqlst { // Sql Template
                         } else if (
                             "function" == typeof plh.getSource
                         ) {
-                            return plh.getSource()(compiler.bind(bindings)).sql;
+                            return plh.getSource().sql(compiler.bind(bindings));
                         };
                     case "undefined":
                         if (i == placeholders.length) return ""; // No placeholder at the very end.
@@ -114,7 +123,7 @@ class sqlst { // Sql Template
             return sql.join("");
         };//}}}
 
-        return engine.wrapper.bind(me)(me.source(compiler.bind({})).sql, args);
+        return engine.wrapper.bind(me)(me.source.sql(compiler.bind({})), args);
     };//}}}
     args(data = {}) {//{{{
         if (data instanceof Array) return data;
