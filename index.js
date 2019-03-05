@@ -72,6 +72,8 @@ class sqltt { // Sql Template
 
             function interpolate(plh, i, bindings = {}) {//{{{
                 switch (typeof plh) {
+                    case "undefined":
+                        if (i == placeholders.length) return ""; // No placeholder at the very end.
                     case "string":
                         return me.hookApply(
                             targettedEngName
@@ -83,20 +85,28 @@ class sqltt { // Sql Template
                     case "function": // Template source:
                         return plh.sql(compiler.bind(bindings));
                     case "object":   // Actual sqltt instance:
-                        if (
-                            plh instanceof Array
-                        ) {
+                        if (plh instanceof Array) {
                             if (typeof plh[0] == "string") {
                                 return me.hookApply(targettedEngName, plh[0], plh[0]);
                             };
                             return interpolate(plh[0], i, plh[1]);
-                        } else if (
-                            "function" == typeof plh.getSource
+                        };
+
+                        // Subtemplate:
+                        // ------------
+                        if ( // Allow source too:
+                            typeof plh.sql == "function"
+                            && ! plh.getSource // sqltt objects has a sql() function too...
                         ) {
+                            plh = new me.constructor(plh);
+                        };
+
+                        // Actual sqltt instance:
+                        if ("function" == typeof plh.getSource) {
                             return plh.getSource(engineFlavour).sql(compiler.bind(bindings));
                         };
-                    case "undefined":
-                        if (i == placeholders.length) return ""; // No placeholder at the very end.
+                        // ------------
+
                     default:
                         throw new Error("Wrong placehloder type: " + typeof plh);
                 };
