@@ -42,6 +42,7 @@ function resolveEngine(engName) {//{{{
 class sqltt { // Sql Template
     constructor(sourceTpl, options = {}) {//{{{
         const me = this;
+        me.options = options;
         me.loadTemplate(sourceTpl);
         me.checkTemplate();
         me.sqlCache = {};
@@ -180,8 +181,10 @@ class sqltt { // Sql Template
         };//}}}
 
         const tplArgs = sourceTpl.sql(argCompiler.bind({}));
-        return Array.from(
-            new Set(hlp.flatten([...(sourceTpl.args || []), ...tplArgs]))
+        return hlp.sortArgs(
+            sourceTpl.args || []
+            , tplArgs
+            , me.options.check_arguments
         );
     };//}}}
     loadTemplate(inTpl) {//{{{
