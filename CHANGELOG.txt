@@ -1,9 +1,20 @@
 CHANGELOG.txt
 =============
 
+v0.3.0 - Query splitting and other improvements.
+
+    Implemented args validation and option to bypass it.
+
+    Updated and improved README.md file
+
+    Implemented query splitting (.split() method).
+
+
 v0.2.1 - Fixed non instantiated subtemplate bug.
 
+
 v0.2.0 - Implemented .concat() method.
+
 
 v0.1.0 - Cleaner format, SQL alternatives and caché.
 
@@ -22,6 +33,7 @@ v0.1.0 - Cleaner format, SQL alternatives and caché.
     Implemented SQL "alternatives" (altsql template property).
 
     Implemented generated queries cache.
+
 
 v0.0.2 - Few improvements for better ppooled-pg integration.
 

@@ -125,10 +125,11 @@ class sqltt { // Sql Template
         return outSql;
     };//}}}
     args(data = {}) {//{{{
+        const me = this;
         if (data instanceof Array) return data;
             // Accept regular positional parameters too
             // (No check is made in this case).
-        return this.argList.map(k=>data[k] || null);
+        return me.argList.map(k=>data[k] || null);
     };//}}}
     getArguments(engineFlavour) {//{{{
         // Recursively retrieve arguments from template respecting
@@ -230,6 +231,21 @@ class sqltt { // Sql Template
             , me
             , { sql: (...args) => me.sql(...args) + str }
         );
+    };//}}}
+    split(engFlav) {//{{{
+        const me = this;
+        const src = me.getSource(engFlav);
+        const opts = Object.assign({}
+            , me.options
+            , {check_arguments: false}
+        );
+        const sqlarr = hlp.qSplit(src.sql);
+        return sqlarr.map(function (sql) {
+            return new sqltt(Object.assign({}
+                , src
+                , {sql, altsql:{}}
+            ), opts)
+        });
     };//}}}
 }
 

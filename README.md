@@ -10,7 +10,11 @@ Index
 
 * [Abstract](#abstract)
 * [Features](#features)
-* [Usage Example](#usage-example)
+* [Setup and Usage](#setup-and-usage)
+    * [Usage:](#usage)
+        * [*template* parts:](#template-parts)
+        * [Valid *options*:](#valid-options)
+* [Usage Examples](#usage-examples)
     * [From NodeJS application:](#from-nodejs-application)
     * [From console](#from-console)
 * [Template Examples](#template-examples)
@@ -23,6 +27,7 @@ Index
     * [Hooks](#hooks)
     * [SQL Alternatives](#sql-alternatives)
     * [String Concatenation](#string-concatenation)
+    * [Query Splitting](#query-splitting)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -84,8 +89,51 @@ Features
       required and then always consumed from caché.
 
 
-Usage Example
--------------
+Setup and Usage
+---------------
+
+To install *sqltt* symply execute `npm install --save sqltt` within your
+project directory.
+
+### Usage:
+
+*sqltt* is intended to be required from SQL template files. (See [Template
+Examples](#template-examples) below). 
+
+Template structure will usually be as follows:
+
+```javascript
+const sqltt = require("sqltt");             // Require sqltt
+const q = new sqltt(template, options);     // Define a query template.
+module.exports = q;                         // Exports it.
+module.parent || console.log(q.sql('cli')); // Allow cli usage.
+```
+
+Where:
+
+  * `template`: Defines the template and possibly other parameters.
+  * `options`: Optional *options* object to specify a few behavioral modifiers.
+
+
+#### *template* parts:
+
+  * `sql`: **(Mandatory)** Actual SQL template of the form `$=>$\`(sql
+    here)\``. See [examples](#template-examples) below.  
+  * `args`: **(Optional)** Array of strings declaring argument names (and its
+    order).
+  * `altsql`: **(Optional)** Let to provide alternative queries for given
+    engines when compatibility hooks aren't enough.
+
+
+#### Valid *options*:
+
+  * **check_arguments** (default: *true*): Allows to avoid template's *args*
+    validation checks (they will be auto-corrected instead of throwing an
+    error).
+
+
+Usage Examples
+--------------
 
 >
 **NOTE:** All examples are for *PostgreSQL* engines. Either case, if engine is
@@ -350,6 +398,18 @@ db.queryRows(
         // (*) Such as ppooled-pg
 ).then(rows=>console.log(rows);
 ```
+
+### Query Splitting
+
+Another *sqltt* instance's method is `.split(<engineType>)`.
+
+This method picks the SQL for the specified engine (or default one if not
+specified or there isn't *altsql* specification for it) and splits it by all
+contained semicolons (`;`).
+
+It retruns an array of new *sqltt* instances for those subqueries.
+
+
 
 TODO
 ----
