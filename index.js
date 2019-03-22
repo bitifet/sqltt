@@ -1,6 +1,7 @@
 "use strict";
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
+const argParser = (v)=>v===undefined?null:v;
 
 function resolveEngine(engName) {//{{{
 
@@ -38,6 +39,8 @@ function resolveEngine(engName) {//{{{
 
     return [eng, targettedEngName, engineFlavour, cliArgs];
 };//}}}
+
+
 
 class sqltt { // Sql Template
     constructor(sourceTpl, options = {}) {//{{{
@@ -129,7 +132,7 @@ class sqltt { // Sql Template
         if (data instanceof Array) return data;
             // Accept regular positional parameters too
             // (No check is made in this case).
-        return me.argList.map(k=>data[k] || null);
+        return me.argList.map(k=>argParser(data[k]));
     };//}}}
     getArguments(engineFlavour) {//{{{
         // Recursively retrieve arguments from template respecting

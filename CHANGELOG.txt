@@ -1,6 +1,10 @@
 CHANGELOG.txt
 =============
 
+v0.3.1 - BUGFIX: Fixed wrong hanling of numeric '0'.
+
+    Fixed .args() method which were handling numeric '0's as nulls.
+
 v0.3.0 - Query splitting and other improvements.
 
     Implemented args validation and option to bypass it.
