@@ -119,7 +119,12 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             outTpl.sql = $=>inTpl($).sql;
             return loadTemplate(me, outTpl);
         };//}}}
-        me.source = inTpl;
+        me.source = Object.assign({}, inTpl);
+        if (typeof me.source.sql === "string") {
+            // Accept string if no argument interpolation needed
+            const sqlStr = me.source.sql;
+            me.source.sql = ()=>sqlStr;
+        };
         me.argList = getArguments(me);
         me.argIdx = hlp.indexArgs(me.argList);
         me.hooks = me.source.hooks || [];
