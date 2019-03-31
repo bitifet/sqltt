@@ -58,37 +58,53 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         // specified order (if given).
         const sourceTpl = me.getSource(engineFlavour);
 
+        function _arg(argName) {//{{{
+            const self = this;
+            if (! argName.length) throw new Error("Empty placehloder name is not allowed");
+            return (
+                self.literals[argName] === undefined
+                    ? argName
+                    : null
+            );
+        };//}}}
+        function _literal() {//{{{
+            return null;
+            // Ignore literals while parsing arguments.
+        };//}}}
+        function _subTemplate(src) {//{{{
+            const self = this;
+            if ( // Allow source too:
+                typeof src.sql == "function"
+                && ! src.getSource // sqltt objects has a sql() function too...
+            ) {
+                src = new me.constructor(src);
+            };
+
+            // Actual sqltt instance:
+            if ("function" == typeof src.getSource) {
+                return src.getSource(engineFlavour).sql(argCompiler.bind({literals: self.bindings}));
+            };
+        };//}}}
+
+
         function argCompiler(parts, ...placeholders){//{{{
-            const literals = this;
+            const self = this;
+            if (! self.literals) self.literals = {};
             function interpolate (plh, i, bindings = {}) {
                 switch (typeof plh) {
                     case "string":
-                        if (! plh.length) throw new Error("Empty placehloder name is not allowed");
-                        return (
-                            literals[plh] === undefined
-                                ? plh
-                                : null
-                        );
+                        return _arg.bind(self)(plh);
                     case "object":   // Actual sqltt instance:
                         if (plh instanceof Array) {
-                            if (typeof plh[0] == "string") return null;
-                                // Allow ["foo"] to apply hooks avoiding argument interpolation.
+                            if (typeof plh[0] == "string") return _literal(plh[0]);
+                                // (Still) Allow ["foo"] to apply hooks avoiding argument interpolation.
                             return interpolate(plh[0], i, plh[1]);
                         };
 
                         // Subtemplate:
                         // ------------
-                        if ( // Allow source too:
-                            typeof plh.sql == "function"
-                            && ! plh.getSource // sqltt objects has a sql() function too...
-                        ) {
-                            plh = new me.constructor(plh);
-                        };
-
-                        // Actual sqltt instance:
-                        if ("function" == typeof plh.getSource) {
-                            return plh.getSource(engineFlavour).sql(argCompiler.bind(bindings));
-                        };
+                        const subTpl = _subTemplate.bind(self)(plh);
+                        if (subTpl) return subTpl;
                         // ------------
 
                     default:
@@ -101,6 +117,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 .filter(x=>x!==null)
             ;
         };//}}}
+
+        argCompiler.arg = _arg;
+        argCompiler.literal = _literal;
+        argCompiler.include = _subTemplate;
 
         const tplArgs = sourceTpl.sql(argCompiler.bind({}));
         return hlp.sortArgs(
@@ -176,46 +196,60 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
         const sqlt = me.getSource(engineFlavour).sql;
+
+        function _arg(argName) {//{{{
+            const self = this;
+            return hookApply(
+                me
+                , targettedEngName
+                , argName
+                , self.literals[argName] === undefined
+                    ? eng.indexer(me.argIdx[argName], argName)
+                    : self.literals[argName]
+            );
+        };//}}}
+        function _literal(str) {//{{{
+            return hookApply(me, targettedEngName, str, str);
+        };//}}}
+        function _subTemplate(src) {//{{{
+            const self = this;
+            if ( // Allow source too:
+                typeof src.sql == "function"
+                && ! src.getSource // sqltt objects has a sql() function too...
+            ) {
+                src = new me.constructor(src);
+            };
+
+            // Actual sqltt instance:
+            if ("function" == typeof src.getSource) {
+                return src.getSource(engineFlavour).sql(compiler.bind({literals: self.bindings}));
+            };
+        };//}}}
+
         function compiler(parts, ...placeholders) {//{{{
             const sql = [];
-            const literals = this;
+            const self = this;
+            if (! self.literals) self.literals = {};
 
             function interpolate(plh, i, bindings = {}) {//{{{
+                self.bindings = bindings;
                 switch (typeof plh) {
                     case "undefined":
                         if (i == placeholders.length) return ""; // No placeholder at the very end.
                     case "string":
-                        return hookApply(
-                            me
-                            , targettedEngName
-                            , plh
-                            , literals[plh] === undefined
-                                ? eng.indexer(me.argIdx[plh], plh)
-                                : literals[plh]
-                        );
-                    case "function": // Template source:
-                        return plh.sql(compiler.bind(bindings));
+                        return _arg.bind(self)(plh);
+                    case "function": // (Old Style) template source:
+                        return plh.sql(compiler.bind(self.bindings));
                     case "object":   // Actual sqltt instance:
                         if (plh instanceof Array) {
-                            if (typeof plh[0] == "string") {
-                                return hookApply(me, targettedEngName, plh[0], plh[0]);
-                            };
+                            if (typeof plh[0] == "string") return _literal(plh[0]);
                             return interpolate(plh[0], i, plh[1]);
                         };
 
                         // Subtemplate:
                         // ------------
-                        if ( // Allow source too:
-                            typeof plh.sql == "function"
-                            && ! plh.getSource // sqltt objects has a sql() function too...
-                        ) {
-                            plh = new me.constructor(plh);
-                        };
-
-                        // Actual sqltt instance:
-                        if ("function" == typeof plh.getSource) {
-                            return plh.getSource(engineFlavour).sql(compiler.bind(bindings));
-                        };
+                        const subTpl = _subTemplate.bind(self)(plh);
+                        if (subTpl) return subTpl;
                         // ------------
 
                     default:
@@ -230,6 +264,15 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             return sql.join("");
         };//}}}
+
+        // Need to do the same to argCompiler() in getArguments() first:
+        // -------------------------------------------------------------
+        compiler.arg = _arg;
+        compiler.literal = _literal;
+        compiler.include = _subTemplate;
+        // (meanwhile it will throw "$.arg (etc..) is not a function" on every use attempt)
+        // -------------------------------------------------------------
+
         const outSql = eng.wrapper.bind(me)(sqlt(compiler.bind({})), args);
         me.sqlCache[engName] = outSql;
         return outSql;
