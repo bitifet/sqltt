@@ -18,8 +18,6 @@ function resolveEngine(engName) {//{{{
             cliArgs.shift();
             engName = requestedEngine+"_cli";
         };
-
-
     };
 
     let targettedEngName = engName;
@@ -38,6 +36,13 @@ function resolveEngine(engName) {//{{{
     const engineFlavour = targettedEngName.replace("_cli", "");
 
     return [eng, targettedEngName, engineFlavour, cliArgs];
+
+};//}}}
+
+class interpolation {//{{{
+    constructor(value) {
+        this.value = value;
+    };
 };//}}}
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -58,20 +63,18 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         // specified order (if given).
         const sourceTpl = me.getSource(engineFlavour);
 
-
         class argCompiler {
 
-            constructor() {
+            constructor(literals = {}) {
                 const self = this;
+                self.literals = literals;
 
                 function acompile(parts, ...placeholders){//{{{
-                    if (! self.literals) self.literals = {};
                     function interpolate (plh, i, bindings = {}) {
+                        if (plh instanceof interpolation) return plh.value;
                         switch (typeof plh) {
                             case "string":
-                                return self.arg(plh);
-                            case "function": // (Old Style) template source:
-                                return plh.sql(acompile.bind(self.bindings));
+                                return self.arg(plh).value;
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
                                     if (typeof plh[0] == "string") return self.literal(plh[0]);
@@ -82,11 +85,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                                 // Subtemplate:
                                 // ------------
                                 const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl;
-
-                                // RETURN!!!!    (FIXME!!!!!)
-                                // That information is not caught whien invoked directly on the template!!!
-
+                                if (subTpl) return subTpl.value;
                                 // ------------
 
                             default:
@@ -111,17 +110,17 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             arg(argName) {//{{{
                 const self = this;
                 if (! argName.length) throw new Error("Empty placehloder name is not allowed");
-                return (
+                return new interpolation (
                     self.literals[argName] === undefined
                         ? argName
                         : null
                 );
             };//}}}
             literal() {//{{{
-                return null;
+                return new interpolation(null);
                 // Ignore literals while parsing arguments.
             };//}}}
-            subTemplate(src) {//{{{
+            subTemplate(src, bindings) {//{{{
                 const self = this;
                 if ( // Allow source too:
                     typeof src.sql == "function"
@@ -132,9 +131,11 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
                 // Actual sqltt instance:
                 if ("function" == typeof src.getSource) {
-                    self.literals = self.bindings; // FIXME (nesting...)
-                    return src.getSource(engineFlavour).sql(new self.constructor());
+                    return new interpolation (
+                        src.getSource(engineFlavour).sql(new self.constructor(bindings))
+                    );
                 };
+
             };//}}}
 
         };
@@ -148,15 +149,6 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         );
     };//}}}
     function loadTemplate(me, inTpl) {//{{{
-        if (typeof inTpl == "function") { // Backward Compatibility Hook{{{
-            // Old Style template transpilation:
-            const outTpl = inTpl(()=>{});
-            if (typeof outTpl != "object") throw new Error (
-                "Wrong old-style template format"
-            );
-            outTpl.sql = $=>inTpl($).sql;
-            return loadTemplate(me, outTpl);
-        };//}}}
         me.source = Object.assign({}, inTpl);
         if (typeof me.source.sql === "string") {
             // Accept string if no argument interpolation needed
@@ -209,7 +201,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default") {//{{{
+    sqltt.prototype.sql = function sql(engName = "default") {
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
@@ -217,25 +209,23 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
 
 
-        class sqlCompiler {
+        class sqlCompiler {//{{{
 
 
-            constructor() {
+            constructor(literals = {}) {
                 const self = this;
+                self.literals = literals;
 
                 function scompiler(parts, ...placeholders) {//{{{
-                    if (! self.literals) self.literals = {};
                     const sql = [];
 
                     function interpolate(plh, i, bindings = {}) {//{{{
-                        self.bindings = bindings;
+                        if (plh instanceof interpolation) return plh.value;
                         switch (typeof plh) {
                             case "undefined":
                                 if (i == placeholders.length) return ""; // No placeholder at the very end.
                             case "string":
-                                return self.arg(plh);
-                            case "function": // (Old Style) template source:
-                                return plh.sql(scompiler.bind(self.bindings));
+                                return self.arg(plh).value;
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
                                     if (typeof plh[0] == "string") return self.literal(plh[0]);
@@ -244,8 +234,8 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
                                 // Subtemplate:
                                 // ------------
-                                const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl;
+                                const subTpl = self.subTemplate(plh, bindings);
+                                if (subTpl) return subTpl.value;
                                 // ------------
 
                             default:
@@ -273,19 +263,23 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             arg(argName) {//{{{
                 const self = this;
-                return hookApply(
-                    me
-                    , targettedEngName
-                    , argName
-                    , self.literals[argName] === undefined
-                        ? eng.indexer(me.argIdx[argName], argName)
-                        : self.literals[argName]
+                return new interpolation (
+                    hookApply (
+                        me
+                        , targettedEngName
+                        , argName
+                        , self.literals[argName] === undefined
+                            ? eng.indexer(me.argIdx[argName], argName)
+                            : self.literals[argName]
+                    )
                 );
             };//}}}
             literal(str) {//{{{
-                return hookApply(me, targettedEngName, str, str);
+                return new interpolation (
+                    hookApply(me, targettedEngName, str, str)
+                );
             };//}}}
-            subTemplate(src) {//{{{
+            subTemplate(src, bindings = {}) {//{{{
                 const self = this;
                 if ( // Allow source too:
                     typeof src.sql == "function"
@@ -296,19 +290,21 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
                 // Actual sqltt instance:
                 if ("function" == typeof src.getSource) {
-                    self.literals = self.bindings; // FIXME (nesting...)
-                    return src.getSource(engineFlavour).sql(new self.constructor());
+                    const str = src.getSource(engineFlavour).sql(new self.constructor(bindings));
+                    return new interpolation (
+                        str
+                    );
                 };
             };//}}}
 
 
-        };
+        };//}}}
 
 
         const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), args);
         me.sqlCache[engName] = outSql;
         return outSql;
-    };//}}}
+    };
     sqltt.prototype.args = function args(data = {}) {//{{{
         const me = this;
         if (data instanceof Array) return data;
