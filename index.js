@@ -77,9 +77,9 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                                 return self.arg(plh).value;
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
-                                    if (typeof plh[0] == "string") return self.literal(plh[0]);
-                                        // (Still) Allow ["foo"] to apply hooks avoiding argument interpolation.
-                                    return interpolate(plh[0], i, plh[1]);
+                                    return plh
+                                        .map(interpolate)
+                                    ;
                                 };
 
                                 // Subtemplate:
@@ -219,7 +219,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 function scompiler(parts, ...placeholders) {//{{{
                     const sql = [];
 
-                    function interpolate(plh, i, bindings = {}) {//{{{
+                    function interpolate(plh, i) {//{{{
                         if (plh instanceof interpolation) return plh.value;
                         switch (typeof plh) {
                             case "undefined":
@@ -228,13 +228,15 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                                 return self.arg(plh).value;
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
-                                    if (typeof plh[0] == "string") return self.literal(plh[0]);
-                                    return interpolate(plh[0], i, plh[1]);
+                                    return plh
+                                        .map(interpolate)
+                                        .join(", ")
+                                    ;
                                 };
 
                                 // Subtemplate:
                                 // ------------
-                                const subTpl = self.subTemplate(plh, bindings);
+                                const subTpl = self.subTemplate(plh);
                                 if (subTpl) return subTpl.value;
                                 // ------------
 
