@@ -41,7 +41,20 @@ function resolveEngine(engName) {//{{{
 
 class interpolation {//{{{
     constructor(value) {
-        this.value = value;
+        this.data = {
+            value: value,
+            wrap: false,
+        };
+    };
+    wrap(w = true) {
+        this.data.wrap = !!w;
+        return this;
+    };
+    render() {
+        return this.data.wrap
+            ? "("+this.data.value+")"
+            : this.data.value
+        ;
     };
 };//}}}
 
@@ -71,10 +84,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
                 function acompile(parts, ...placeholders){//{{{
                     function interpolate (plh, i, bindings = {}) {
-                        if (plh instanceof interpolation) return plh.value;
+                        if (plh instanceof interpolation) return plh.render();
                         switch (typeof plh) {
                             case "string":
-                                return self.arg(plh).value;
+                                return self.arg(plh).render();
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
                                     return plh
@@ -85,7 +98,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                                 // Subtemplate:
                                 // ------------
                                 const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl.value;
+                                if (subTpl) return subTpl.render();
                                 // ------------
 
                             default:
@@ -109,6 +122,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             arg(argName) {//{{{
                 const self = this;
+                if (argName instanceof Array) return argName.map(self.arg.bind(self));
                 if (! argName.length) throw new Error("Empty placehloder name is not allowed");
                 return new interpolation (
                     self.literals[argName] === undefined
@@ -122,6 +136,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             };//}}}
             subTemplate(src, bindings) {//{{{
                 const self = this;
+                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings));
                 if ( // Allow source too:
                     typeof src.sql == "function"
                     && ! src.getSource // sqltt objects has a sql() function too...
@@ -220,12 +235,12 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     const sql = [];
 
                     function interpolate(plh, i) {//{{{
-                        if (plh instanceof interpolation) return plh.value;
+                        if (plh instanceof interpolation) return plh.render();
                         switch (typeof plh) {
                             case "undefined":
                                 if (i == placeholders.length) return ""; // No placeholder at the very end.
                             case "string":
-                                return self.arg(plh).value;
+                                return self.arg(plh).render();
                             case "object":   // Actual sqltt instance:
                                 if (plh instanceof Array) {
                                     return plh
@@ -237,7 +252,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                                 // Subtemplate:
                                 // ------------
                                 const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl.value;
+                                if (subTpl) return subTpl.render();
                                 // ------------
 
                             default:
@@ -265,6 +280,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             arg(argName) {//{{{
                 const self = this;
+                if (argName instanceof Array) return argName.map(self.arg.bind(self));
                 return new interpolation (
                     hookApply (
                         me
@@ -277,12 +293,15 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 );
             };//}}}
             literal(str) {//{{{
+                const self = this;
+                if (str instanceof Array) return str.map(s=>self.literal(s).wrap());
                 return new interpolation (
                     hookApply(me, targettedEngName, str, str)
                 );
             };//}}}
             subTemplate(src, bindings = {}) {//{{{
                 const self = this;
+                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings));
                 if ( // Allow source too:
                     typeof src.sql == "function"
                     && ! src.getSource // sqltt objects has a sql() function too...
