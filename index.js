@@ -164,6 +164,11 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         );
     };//}}}
     function loadTemplate(me, inTpl) {//{{{
+        if (
+            (typeof inTpl == "string")
+            || (typeof inTpl == "function")
+        ) inTpl = {sql: inTpl};
+            // Accept simple string too.
         me.source = Object.assign({}, inTpl);
         if (typeof me.source.sql === "string") {
             // Accept string if no argument interpolation needed
@@ -216,7 +221,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default") {
+    sqltt.prototype.sql = function sql(engName = "default") {//{{{
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
@@ -325,7 +330,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), args);
         me.sqlCache[engName] = outSql;
         return outSql;
-    };
+    };//}}}
     sqltt.prototype.args = function args(data = {}) {//{{{
         const me = this;
         if (data instanceof Array) return data;
