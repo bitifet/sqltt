@@ -204,7 +204,15 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
 
     };//}}}
-
+    function src2tpl(src) { // Ensures sqltt instance{{{
+        if ( // Allow source too:
+            typeof src.sql == "function"
+            && ! src.getSource // sqltt objects has a sql() function too...
+        ) {
+            src = new sqltt(src);
+        };
+        return src;
+    };//}}}
 
     // Constructor:
     // ------------
@@ -232,8 +240,6 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
         const sqlt = me.getSource(engineFlavour).sql;
-
-
 
         class sqlCompiler {//{{{
 
@@ -287,8 +293,6 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             };
 
-
-
             arg(argName) {//{{{
                 const self = this;
                 if (argName instanceof Array) return argName.map(s=>self.arg(s).wrap());
@@ -312,14 +316,15 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             };//}}}
             subTemplate(src, bindings = {}) {//{{{
                 const self = this;
-                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings).wrap(s.getSource().alias));
-                if ( // Allow source too:
-                    typeof src.sql == "function"
-                    && ! src.getSource // sqltt objects has a sql() function too...
-                ) {
-                    src = new me.constructor(src);
-                };
-
+                if (src instanceof Array) return src
+                    .map(src2tpl)
+                    .map(
+                        s=>self
+                            .subTemplate(s, bindings)
+                            .wrap(s.getSource().alias)
+                    )
+                ;
+                src = src2tpl(src);
                 // Actual sqltt instance:
                 if ("function" == typeof src.getSource) {
                     const str = src.getSource(engineFlavour).sql(new self.constructor(bindings));
@@ -329,9 +334,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 };
             };//}}}
 
-
         };//}}}
-
 
         const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), args);
         me.sqlCache[engName] = outSql;
