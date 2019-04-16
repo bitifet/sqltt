@@ -5,23 +5,23 @@ const sqltt = require('../');
 // Helpers
 // =======
 
-function hsql(src, engine) {
+function hsql(src, engine) { // Tpl to SQL{{{
     const q = new sqltt(src);
     return q.sql(engine);
-};
-function hargl(src) {
+};//}}}
+function hargl(src) { // Tpl to arguments list{{{
     const q = new sqltt(src);
     return q.argList;
-};
-function hargs(src, args) {
+};//}}}
+function hargs(src, args) { // Tpl, argsObj to argsArr{{{
     const q = new sqltt(src);
     return q.args(args);
-};
+};//}}}
 
 
 describe('sqltt class', function() {
 
-    describe("Basic testing", function() {
+    describe("Basic testing", function() {//{{{
         it ('Should have .getSource()', function() {
             var q;
 
@@ -30,11 +30,11 @@ describe('sqltt class', function() {
             }, "Does not accept simple string as template");
             assert.equal(typeof q.getSource, "function");
         });
-    });
+    });//}}}
 
-    describe("Query Features", function() {
+    describe('"Tag" methods', function() {
 
-        it ('Acceptable template formats', function() {
+        it ('Acceptable template formats', function() {//{{{
             var q;
 
             assert.doesNotThrow(function() {
@@ -47,25 +47,25 @@ describe('sqltt class', function() {
 
 
             assert.equal("select $1, $2, $3", q.sql().trim());
+            assert.equal("select $1, $2, $3", q.sql("postgresql").trim());
             assert.equal("select :1, :2, :3", q.sql("oracle").trim());
-            ///assert.equal("select :1, :2, :3", q.args({}));
 
-        });
+        });//}}}
 
-        it ('Interpolation methods', function() {
+        it ('Interpolation methods', function() {//{{{
 
             const q = $=>$`s ${"foo"}, ${$.arg("bar")}, ${$.arg(["baz1", "baz2"])}, ${["baz3", "baz4"]} f`;
             assert.equal(
                 hsql(q)
-                , "s $1, $2, $3, $4, $5, $6 f"
+                , "s $1, $2, ($3), ($4), $5, $6 f"
             )
             assert.equal(
                 hsql(q, "postgresql")
-                , "s $1, $2, $3, $4, $5, $6 f"
+                , "s $1, $2, ($3), ($4), $5, $6 f"
             )
             assert.equal(
                 hsql(q, "oracle")
-                , "s :1, :2, :3, :4, :5, :6 f"
+                , "s :1, :2, (:3), (:4), :5, :6 f"
             )
             assert.deepStrictEqual(
                 hargl(q)
@@ -78,10 +78,9 @@ describe('sqltt class', function() {
             )
 
 
-        });
+        });//}}}
 
-
-        it ('Arguments order', function() {
+        it ('Arguments order', function() {//{{{
 
             const q = {
                 args: ['baz2', 'bar'],
@@ -99,9 +98,7 @@ describe('sqltt class', function() {
                 , "Argument list should be generated in right order"
             )
 
-        });
-
-
+        });//}}}
 
     });
 

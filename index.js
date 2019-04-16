@@ -44,15 +44,21 @@ class interpolation {//{{{
         this.data = {
             value: value,
             wrap: false,
+            alias: false,
         };
     };
-    wrap(w = true) {
-        this.data.wrap = !!w;
+    wrap(alias) {
+        this.data.wrap = true;
+        this.data.alias = alias;
         return this;
     };
     render() {
+        const aliasStr = this.data.alias
+            ? " as " + this.data.alias // FIXME (get rid of "as" with oracle)
+            : ""
+        ;
         return this.data.wrap
-            ? "("+this.data.value+")"
+            ? "("+this.data.value+")" + aliasStr
             : this.data.value
         ;
     };
@@ -285,7 +291,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
             arg(argName) {//{{{
                 const self = this;
-                if (argName instanceof Array) return argName.map(self.arg.bind(self));
+                if (argName instanceof Array) return argName.map(s=>self.arg(s).wrap());
                 return new interpolation (
                     hookApply (
                         me
@@ -306,7 +312,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             };//}}}
             subTemplate(src, bindings = {}) {//{{{
                 const self = this;
-                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings));
+                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings).wrap(s.getSource().alias));
                 if ( // Allow source too:
                     typeof src.sql == "function"
                     && ! src.getSource // sqltt objects has a sql() function too...
