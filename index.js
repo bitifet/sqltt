@@ -54,7 +54,7 @@ class interpolation {//{{{
     };
     render() {
         const aliasStr = this.data.alias
-            ? " as " + this.data.alias // FIXME (get rid of "as" with oracle)
+            ? " " + this.data.alias
             : ""
         ;
         return this.data.wrap
@@ -321,7 +321,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     .map(
                         s=>self
                             .subTemplate(s, bindings)
-                            .wrap(s.getSource().alias)
+                            .wrap(eng.alias(s.getSource().alias))
                     )
                 ;
                 src = src2tpl(src);
