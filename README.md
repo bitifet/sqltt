@@ -60,8 +60,9 @@ Features
     - If placeholder is another *sqltt* template or instance, it is
       automatically nested in place (assuming/merging its arguments too).
     - Can be nested with some (or all) parameters previously fixed (using two
-      elements array: une for the nested query and the other for a JSON
+      elements array: one for the nested query and the other for a JSON
       argument linterals sepcification).
+    - TODO: Deep nesting not yet working (only one level).
 
   * Multiple database engine support. Placeholderers and other tweaks get
     automatically generated in proper syntax.
@@ -123,6 +124,8 @@ Where:
     order).
   * `altsql`: **(Optional)** Let to provide alternative queries for given
     engines when compatibility hooks aren't enough.
+  * alias: **(Optional)** Provide an alias name to be used in case of de whole
+    query being included beside others through `$.include([subq1, ...])`.
 
 
 #### Valid *options*:
@@ -243,7 +246,7 @@ const q = new sqltt({
         with usersCte as (
             ${
                 // Include another query:
-                require("./users.sql.js")
+                $.include(require("./users.sql.js"))
             }
         )
         select *
@@ -251,7 +254,7 @@ const q = new sqltt({
         join (
             ${
                 // Include another query and fill some arguments:
-                [require("./privileges.sql.js"), {privilege_name: "'login'"}]
+                $.include(require("./privileges.sql.js"), {privilege_name: "'login'"})
             }
         ) as loggeableUsers
         --@@/sql@@

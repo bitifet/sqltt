@@ -7,7 +7,7 @@ const q = new sqltt({
         with usersCte as (
             ${
                 // Include another query:
-                require("./users.sql.js")
+                $.include(require("./users.sql.js"))
             }
         )
         select *
@@ -15,7 +15,7 @@ const q = new sqltt({
         join (
             ${
                 // Include another query and fill some arguments:
-                [require("./privileges.sql.js"), {privilege_name: "'login'"}]
+                $.include(require("./privileges.sql.js"), {privilege_name: "'login'"})
             }
         ) as loggeableUsers
         --@@/sql@@
