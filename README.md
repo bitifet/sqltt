@@ -11,22 +11,13 @@ Index
 * [Abstract](#abstract)
 * [Features](#features)
 * [Setup and Usage](#setup-and-usage)
-    * [Usage:](#usage)
+    * [Single-query template files:](#single-query-template-files)
+    * [Mulitple-query template files:](#mulitple-query-template-files)
         * [*template* parts:](#template-parts)
         * [Valid *options*:](#valid-options)
 * [Usage Examples](#usage-examples)
     * [From NodeJS application:](#from-nodejs-application)
     * [From console](#from-console)
-* [Template Examples](#template-examples)
-    * [Simple template file](#simple-template-file)
-    * [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
-    * [Full example with nested templates](#full-example-with-nested-templates)
-* [Supported Database Engines](#supported-database-engines)
-    * [Adding more Database Engines](#adding-more-database-engines)
-* [Advanced Features](#advanced-features)
-    * [Hooks](#hooks)
-    * [SQL Alternatives](#sql-alternatives)
-    * [String Concatenation](#string-concatenation)
     * [Query Splitting](#query-splitting)
 * [TODO](#todo)
 * [Contributing](#contributing)
@@ -96,7 +87,7 @@ Setup and Usage
 To install *sqltt* symply execute `npm install --save sqltt` within your
 project directory.
 
-### Usage:
+### Single-query template files:
 
 *sqltt* is intended to be required from SQL template files. (See [Template
 Examples](#template-examples) below). 
@@ -107,19 +98,93 @@ Template structure will usually be as follows:
 const sqltt = require("sqltt");             // Require sqltt
 const q = new sqltt(template, options);     // Define a query template.
 module.exports = q;                         // Exports it.
-module.parent || console.log(q.sql('cli')); // Allow cli usage.
+module.parent || console.log(               // Allow cli usage.
+    q.sql('cli', process.argv.slice(2))     // Allow shell arguments
+);
 ```
 
-Where:
+**Where:**
 
-  * `template`: Defines the template and possibly other parameters.
+  * `template`: Defines the template and possibly other parameters (see
+          [template parts:](#template-parts) below).
   * `options`: Optional *options* object to specify a few behavioral modifiers.
+
+**Usage Examples:**
+
+  * From application:
+
+```javascript
+const myQuery = require('path/to/my/sqltt_template.sql.js');
+const sql = myQuery.sql('postgresql'); // Get postgresql suitable SQL.
+const sql = myQuery.sql('oracle');     // Get postgresql suitable SQL.
+const args = myQuery.args({            // Get properly sorted and filtered
+    argument1: "value1",               // arguments array.
+    argument2: "value2",
+    /*...*/
+});
+```
+
+  * From command line:
+
+```sh
+# Get parametyzed sql to provide to some database cli:
+$ node myQuery.sql.js arg1 arg2 "argument 3"
+# Do the same specifically for oracle engine:
+$ SQLTT_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
+# You also can directly pipe to that cli:
+$ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
+```
+
+### Mulitple-query template files:
+
+For small queries, sometimes it turns out being more practical to gather them
+together into single file and export them as *key*->*value* object.
+
+With minimal changes to the previous pattern we can achieve this:
+
+```javascript
+const sqltt = require("sqltt");             // Require sqltt
+const q = {                // Define multiple named query templates.
+    list: new sqltt(listQueryTemplate, options),
+    get:  new sqltt(getQueryTemplate, options),
+    insert:  new sqltt(insertQueryTemplate, options),
+    update:  new sqltt(updateQueryTemplate, options),
+    /* ... */
+}
+module.exports = q;                         // Exports it.
+if (module.parent) {
+    const args = process.argv.slice(2);     // Get shell arguments.
+    const qId = args.shift()                // Extract first as query id.
+    console.log(q[quId].sql('cli', args));  // Output query
+);
+```
+
+**Usage Examples:**
+
+  * From application:
+
+```javascript
+const myQueryRepo = require('path/to/my/sqltt_tpl_repo.sql.js');
+const sql = myQueryRepo.someQuery.sql('postgresql');
+const args = myQueryRepo.someOtherQuery.args({ /*...*/ });
+```
+
+  * From command line:
+
+```sh
+# The only difference here is that we reserve the first argument to select
+# targetted query.
+$ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
+```
 
 
 #### *template* parts:
 
-  * `sql`: **(Mandatory)** Actual SQL template of the form `$=>$\`(sql
-    here)\``. See [examples](#template-examples) below.  
+  * `sql`: **(Mandatory)** Actual SQL template of the following form (See
+    [examples](#template-examples) below):
+```
+  $=>$`(sql here)` 
+```
   * `args`: **(Optional)** Array of strings declaring argument names (and its
     order).
   * `altsql`: **(Optional)** Let to provide alternative queries for given
@@ -173,14 +238,23 @@ db.queryRows(
 
 **For inspection:**
 ```sh
-node path/to/myQuery.sql.js --postgres
+SQLTT_ENGINE=postgresql node path/to/myQuery.sql.js
 ```
 
 **For execution:**
 
 ```sh
-node path/to/myQuery.sql.js --postgres arg1, arg2 | psql dbName [other_arguments...]
+SQLTT_ENGINE=postgresql node path/to/myQuery.sql.js arg1, arg2 | psql dbName [other_arguments...]
 ```
+
+**In multiple query format:**
+
+```sh
+SQLTT_ENGINE=postgresql node path/to/myQueryRepo.sql.js queryName
+# ... arg1, arg2 | psql dbName [...] # To execute
+
+
+
 
 Template Examples
 -----------------
