@@ -2,25 +2,18 @@
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
 const argParser = (v)=>v===undefined?null:v;
+const ENGINE_ENV_VAR = 'SQLTT_ENGINE';
 
 function resolveEngine(engName) {//{{{
 
-    const isCli = (engName || "").match(/^(?:(\w+)_)?cli$/);
-    let cliArgs;
-    if (isCli) cliArgs = process.argv.slice(2);
+    const targettedEngName = engName;
+    const isCli = (targettedEngName || "").match(/^(?:(\w+)_)?cli$/);
 
     if (engName == "cli") {
-        let requestedEngine = (
-            (cliArgs[0] || "").match(/^--(\w+)$/)
-            || []
-        )[1];
-        if (requestedEngine) {
-            cliArgs.shift();
-            engName = requestedEngine+"_cli";
-        };
+        const requestedEngine = process.env[ENGINE_ENV_VAR];
+        if (requestedEngine) engName = requestedEngine+"_cli";
     };
 
-    let targettedEngName = engName;
     if (isCli && ! engines[engName]) {
         console.error(
             "-- Unknown/Unimplemented cli engine: "
@@ -35,7 +28,7 @@ function resolveEngine(engName) {//{{{
 
     const engineFlavour = targettedEngName.replace("_cli", "");
 
-    return [eng, targettedEngName, engineFlavour, cliArgs];
+    return [eng, targettedEngName, engineFlavour];
 
 };//}}}
 
@@ -235,10 +228,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default") {//{{{
+    sqltt.prototype.sql = function sql(engName = "default", cliArgs = {}) {//{{{
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
-        const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
+        const [eng, targettedEngName, engineFlavour] = resolveEngine(engName);
         const sqlt = me.getSource(engineFlavour).sql;
 
         class sqlCompiler {//{{{
@@ -336,7 +329,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         };//}}}
 
-        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), args);
+        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), cliArgs);
         me.sqlCache[engName] = outSql;
         return outSql;
     };//}}}
