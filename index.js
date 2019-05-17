@@ -3,11 +3,10 @@ const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
 const argParser = (v)=>v===undefined?null:v;
 
-function resolveEngine(engName) {//{{{
+function resolveEngine(me, engName, cliArgs = []) {//{{{
 
-    const isCli = (engName || "").match(/^(?:(\w+)_)?cli$/);
-    let cliArgs;
-    if (isCli) cliArgs = process.argv.slice(2);
+    if (! engName) engName = "default";
+    const isCli = engName.match(/^(?:(\w+)_)?cli$/);
 
     if (engName == "cli") {
         let requestedEngine = (
@@ -19,8 +18,10 @@ function resolveEngine(engName) {//{{{
             engName = requestedEngine+"_cli";
         };
     };
+    console.log(engName, cliArgs);
 
-    let targettedEngName = engName;
+    me.targettedEngName = engName;
+    me.engineFlavour = me.targettedEngName.replace("_cli", "");
     if (isCli && ! engines[engName]) {
         console.error(
             "-- Unknown/Unimplemented cli engine: "
@@ -30,12 +31,8 @@ function resolveEngine(engName) {//{{{
         engName = "cli";
     };
 
-    const eng = engines[engName];
-    if (! eng) throw new Error ("Unknown database engine: " + engName);
-
-    const engineFlavour = targettedEngName.replace("_cli", "");
-
-    return [eng, targettedEngName, engineFlavour, cliArgs];
+    me.eng = engines[engName];
+    if (! me.eng) throw new Error ("Unknown database engine: " + engName);
 
 };//}}}
 
@@ -69,18 +66,18 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // Private functions:
     // ------------------
 
-    function hookApply(me, engName, arg, rarg) {//{{{
+    function hookApply(me, arg, rarg) {//{{{
         const hook = me.hooks[arg];
         if (! hook) return rarg;
         const hookt = typeof hook;
-        if (hookt == "function") return hook(rarg, engName) || rarg;
+        if (hookt == "function") return hook(rarg, me.targettedEngine) || rarg;
         if (hookt == "string") return hook.replace(/%/g, rarg);
         throw new Error ("Invalid hook type: " + hookt);
     };//}}}
-    function getArguments(me, engineFlavour) {//{{{
+    function getArguments(me) {//{{{
         // Recursively retrieve arguments from template respecting
         // specified order (if given).
-        const sourceTpl = me.getSource(engineFlavour);
+        const sourceTpl = me.getSource(me.engineFlavour);
 
         class argCompiler {
 
@@ -153,7 +150,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 // Actual sqltt instance:
                 if ("function" == typeof src.getSource) {
                     return new interpolation (
-                        src.getSource(engineFlavour).sql(new self.constructor(bindings))
+                        src.getSource(me.engineFlavour).sql(new self.constructor(bindings))
                     );
                 };
 
@@ -223,6 +220,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         loadTemplate(me, sourceTpl);
         checkTemplate(me);
         me.sqlCache = {};
+        resolveEngine(me);
     };//}}}
 
 
@@ -235,11 +233,11 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default") {//{{{
+    sqltt.prototype.sql = function sql() {//{{{
         const me = this;
-        if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
-        const [eng, targettedEngName, engineFlavour, args] = resolveEngine(engName);
-        const sqlt = me.getSource(engineFlavour).sql;
+        if (me.sqlCache[me.engName] !== undefined) return me.sqlCache[me.engName];
+
+        const sqlt = me.getSource(me.engineFlavour).sql;
 
         class sqlCompiler {//{{{
 
@@ -299,10 +297,9 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 return new interpolation (
                     hookApply (
                         me
-                        , targettedEngName
                         , argName
                         , self.literals[argName] === undefined
-                            ? eng.indexer(me.argIdx[argName], argName)
+                            ? me.eng.indexer(me.argIdx[argName], argName)
                             : self.literals[argName]
                     )
                 );
@@ -311,7 +308,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 const self = this;
                 if (str instanceof Array) return str.map(s=>self.literal(s).wrap());
                 return new interpolation (
-                    hookApply(me, targettedEngName, str, str)
+                    hookApply(me, str, str)
                 );
             };//}}}
             subTemplate(src, bindings = {}) {//{{{
@@ -321,13 +318,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     .map(
                         s=>self
                             .subTemplate(s, bindings)
-                            .wrap(eng.alias(s.getSource().alias))
+                            .wrap(me.eng.alias(s.getSource().alias))
                     )
                 ;
                 src = src2tpl(src);
                 // Actual sqltt instance:
                 if ("function" == typeof src.getSource) {
-                    const str = src.getSource(engineFlavour).sql(new self.constructor(bindings));
+                    const str = src.getSource(me.engineFlavour).sql(new self.constructor(bindings));
                     return new interpolation (
                         str
                     );
@@ -336,8 +333,8 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         };//}}}
 
-        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), args);
-        me.sqlCache[engName] = outSql;
+        const outSql = me.eng.wrapper.bind(me)(sqlt(new sqlCompiler), [] /* FIXME!!! (it was args) */);
+        me.sqlCache[me.engName] = outSql;
         return outSql;
     };//}}}
     sqltt.prototype.args = function args(data = {}) {//{{{
@@ -345,8 +342,21 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (data instanceof Array) return data;
             // Accept regular positional parameters too
             // (No check is made in this case).
-        return me.argList.map(k=>argParser(data[k]));
+        return me.eng.argsRenderer(
+            me.argList.map(k=>argParser(data[k]))
+        );
     };//}}}
+
+    sqltt.prototype.setEngine = function setEngine(engName, args) {
+        const me = this;
+        const clone = Object.assign(
+            Object.create(Object.getPrototypeOf(me))
+            , me
+        );
+        resolveEngine(clone, engName, args);
+        return clone;
+    };
+
     sqltt.prototype.concat = function concat(str) {//{{{
         const me = this;
         return Object.assign(
