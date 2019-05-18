@@ -5,35 +5,27 @@
 const sqltt = require("../");
 
 const q = {                // Define multiple named query templates.
-    list: new sqltt(`
-        --@@sql@@
+    list: new sqltt( /* @@sql@@ */ `
             select id, sectionName, title
             from articles
             join sections using(sectionId)
-        --@@/sql@@
-    `),
-    listBySection: new sqltt($=>$`
-        --@@sql@@
+    ` /* @@/sql@@ */),
+    listBySection: new sqltt( /* @@sql@@ */ $=>$`
             select id, sectionName, title
             from articles
             join sections using(sectionId)
             where sectionId = ${$.arg("sectionId")}
-        --@@/sql@@
-    `),
-    show: new sqltt($=>$`
-        --@@sql@@
+    ` /* @@/sql@@ */),
+    show: new sqltt( /* @@sql@@ */ $=>$`
             select id, sectionName, title, body
             from articles
             join sections using(sectionId)
             where id = ${"id"}
-        --@@/sql@@
-    `),
-    create: new sqltt($=>$`
-        --@@sql@@
+    ` /* @@/sql@@ */),
+    create: new sqltt( /* @@sql@@ */ $=>$`
             insert into articles (sectionId, title, body)
             values (${"sectionId"}, ${"title"}, ${"body"})
-        --@@/sql@@
-    `),
+    ` /* @@/sql@@ */),
 }
 
 module.exports = q;                      // Exports it.

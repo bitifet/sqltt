@@ -270,14 +270,12 @@ const sqltt = require("sqltt");
 const q = new sqltt({
     // args: ["company_name", "company_dept"], // Specify parameters order
                                                // (optional)
-    sql: $=>$`
-        --@@sql@@
+    sql: /* @@sql@@ */ $=>$`
         select *
         from users
         where company_name = ${"company_name"}
         and company_dept = ${"company_dept"}
-        --@@/sql@@
-    `,
+    `, /* @@/sql@@ */
 });
 
 // Exports query to be used as library:
@@ -287,18 +285,24 @@ module.exports = q;
 module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
+>
+**NOTE:** `/* @@sql@@ */` and `/* @@/sql@@ */` comments are optional (and, for
+the sake of simplicity, I won't use them again in this document.
+>
+I only left them once because I'm sure that vim users [will enjoy
+them](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
+>
+
 
 ### Simpler template example with no boilerplate
 
 ```javascript
 module.exports = $ => ({
     sql: $`
-        --@@sql@@
         select *
         from privileges
         where user_id = ${"user_id"}
         and privilege_name = ${"privilege_name"}
-        --@@/sql@@
     `,
 });
 ```
@@ -319,7 +323,6 @@ single file and only instantiate those we are actually going to use.
 const sqltt = require("sqltt");
 const q = new sqltt({
     sql: $=>$`
-        --@@sql@@
         with usersCte as (
             ${
                 // Include another query:
@@ -334,7 +337,6 @@ const q = new sqltt({
                 $.include(require("./privileges.sql.js"), {privilege_name: "'login'"})
             }
         ) as loggeableUsers
-        --@@/sql@@
     `,
 });
 module.exports = q;
@@ -395,11 +397,9 @@ const q = new sqltt({
         fromTimestamp: (arg, eng) => eng.match(/^oracle/) && "TO_DATE("+arg+", 'yyyy/mm/dd')",
     },
     sql: $=>$`
-        --@@sql@@
         select ${["json_data"]}
         from some_table
         where some_column = ${"some_value"}
-        --@@/sql@@
     `,
 });
 module.exports = q;
@@ -434,15 +434,11 @@ for given database through *altsql* property.
 const sqltt = require("sqltt");
 const q = new sqltt({
     sql: $=>$`
-        --@@sql@@
         /* Regular SQL */
-        --@@/sql@@
     `,
     altsql: {
         $=>$`
-            --@@sql@@
             /* Oracle specific SQL */
-            --@@/sql@@
         `
     }
 });

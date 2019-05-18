@@ -2,8 +2,7 @@
 const sqltt = require("../");
 
 const q = new sqltt({
-    sql: $=>$`
-        --@@sql@@
+    sql: /* @@sql@@ */ $=>$`
         with usersCte as (
             ${
                 // Include another query:
@@ -18,8 +17,7 @@ const q = new sqltt({
                 $.include(require("./privileges.sql.js"), {privilege_name: "'login'"})
             }
         ) as loggeableUsers
-        --@@/sql@@
-    `,
+    `, /* @@/sql@@ */
 });
 
 
