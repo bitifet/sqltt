@@ -82,7 +82,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 self.literals = literals;
 
                 function acompile(parts, ...placeholders){//{{{
-                    function interpolate (plh, i, bindings = {}) {
+                    function interpolate (plh, i, bindings = {}) {//{{{
                         if (plh instanceof interpolation) return plh.render();
                         switch (typeof plh) {
                             case "string":
@@ -103,8 +103,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                             default:
                                 throw new Error("Wrong placehloder type: " + typeof plh);
                         };
-                    }
-
+                    };//}}}
                     return placeholders
                         .map(interpolate)
                         .filter(x=>x!==null)
@@ -154,11 +153,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         };
 
-
         const tplArgs = sourceTpl.sql(new argCompiler());
         return hlp.sortArgs(
             sourceTpl.args || []
-            , tplArgs
+            , typeof tplArgs == "object" ? tplArgs : []
             , me.options.check_arguments
         );
     };//}}}
@@ -228,7 +226,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default", cliArgs = {}) {//{{{
+    sqltt.prototype.sql = function sql(engName = "default", cliArgs = []) {//{{{
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const [eng, targettedEngName, engineFlavour] = resolveEngine(engName);

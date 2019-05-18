@@ -15,5 +15,5 @@ const q = new sqltt({
 
 module.exports = q;
 
-module.parent || console.log(q.sql('cli'));
+module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 

@@ -10,6 +10,21 @@ TO-DO
     This will ease the building of large insert or updates based on
     `{fieldName: "argName", ...}` JSON specifications.
 
+  * Implement conditionals (`$.if(cbk, thenPart, elsePart)`).
+    - cbk() will receive .sql()'s (optional) arguments parameter.
+      - (still named *cliArgs* but it could become -optional- *args* only)
+    - If returns a true value, *thenPart* is rendered.
+    - Else *elsePart* is rendered instead.
+    - *thenPart* and *elsePart* could be from simple string literals to whole
+      subtemplates.
+
+  * Rename .sql()'s *cliArgs* argument to simply *args*.
+    - Allow them to be simple array of argument names (to specify which are
+      expected to be defined).
+
+  * Start writing out good manual ;-)
+
+
 Notes
 -----
 
