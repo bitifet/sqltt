@@ -137,26 +137,29 @@ $ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 
 ### Mulitple-query template files:
 
-For small queries, sometimes it turns out being more practical to gather them
-together into single file and export them as *key*->*value* object.
+For small queries, sometimes it turns out being more practical gathering them
+together into single file exported as *key*->*value* object.
 
-With minimal changes to the previous pattern we can achieve this:
+We can achieve this with minimal changes to the previous pattern:
 
 ```javascript
-const sqltt = require("sqltt");             // Require sqltt
-const q = {                // Define multiple named query templates.
+const sqltt = require("sqltt");          // Require sqltt
+const q = {                              // Define multiple named queries.
     list: new sqltt(listQueryTemplate, options),
     get:  new sqltt(getQueryTemplate, options),
     insert:  new sqltt(insertQueryTemplate, options),
     update:  new sqltt(updateQueryTemplate, options),
     /* ... */
 }
-module.exports = q;                         // Exports it.
-if (module.parent) {
-    const args = process.argv.slice(2);     // Get shell arguments.
-    const qId = args.shift()                // Extract first as query id.
-    console.log(q[quId].sql('cli', args));  // Output query
-);
+module.exports = q;                      // Exports it.
+if (! module.parent) {
+    const args = process.argv.slice(2);  // Get shell arguments.
+    const qId = args.shift()             // Extract first as query id.
+    console.log (qId
+        ?  q[qId].sql('cli', args)       // Render query if selected
+        : "Available queries: " + Object.keys(q).join(", ")
+    );  // ...and provide available queries list if no argument provided.
+};
 ```
 
 **Usage Examples:**
@@ -281,7 +284,7 @@ const q = new sqltt({
 module.exports = q;
 
 // When directly invoked, output propper cli version to stdout:
-module.parent || console.log(q.sql('cli'));
+module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
 
@@ -335,7 +338,7 @@ const q = new sqltt({
     `,
 });
 module.exports = q;
-module.parent || console.log(q.sql('cli'));
+module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
 >
@@ -400,7 +403,7 @@ const q = new sqltt({
     `,
 });
 module.exports = q;
-module.parent || console.log(q.sql('cli'));
+module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
 There's a shorthand consisting in to simply specify an alternative string. In
@@ -444,7 +447,7 @@ const q = new sqltt({
     }
 });
 module.exports = q;
-module.parent || console.log(q.sql('cli'));
+module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
 >
