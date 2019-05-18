@@ -1,8 +1,11 @@
 "use strict";
+const ENGINE_ENV_VAR = 'SQLTT_ENGINE';
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
 const argParser = (v)=>v===undefined?null:v;
-const ENGINE_ENV_VAR = 'SQLTT_ENGINE';
+const interpolation = require("./lib/interpolation");
+const argCompiler = require("./lib/argCompiler");
+const sqlCompiler = require("./lib/sqlCompiler");
 
 function resolveEngine(engName) {//{{{
 
@@ -32,128 +35,19 @@ function resolveEngine(engName) {//{{{
 
 };//}}}
 
-class interpolation {//{{{
-    constructor(value) {
-        this.data = {
-            value: value,
-            wrap: false,
-            alias: false,
-        };
-    };
-    wrap(alias) {
-        this.data.wrap = true;
-        this.data.alias = alias;
-        return this;
-    };
-    render() {
-        const aliasStr = this.data.alias
-            ? " " + this.data.alias
-            : ""
-        ;
-        return this.data.wrap
-            ? "("+this.data.value+")" + aliasStr
-            : this.data.value
-        ;
-    };
-};//}}}
 
 const sqltt = (function(){ // Sql Tagged Template Engine
 
     // Private functions:
     // ------------------
 
-    function hookApply(me, engName, arg, rarg) {//{{{
-        const hook = me.hooks[arg];
-        if (! hook) return rarg;
-        const hookt = typeof hook;
-        if (hookt == "function") return hook(rarg, engName) || rarg;
-        if (hookt == "string") return hook.replace(/%/g, rarg);
-        throw new Error ("Invalid hook type: " + hookt);
-    };//}}}
     function getArguments(me, engineFlavour) {//{{{
         // Recursively retrieve arguments from template respecting
         // specified order (if given).
         const sourceTpl = me.getSource(engineFlavour);
-
-        class argCompiler {
-
-            constructor(literals = {}) {
-                const self = this;
-                self.literals = literals;
-
-                function acompile(parts, ...placeholders){//{{{
-                    function interpolate (plh, i, bindings = {}) {//{{{
-                        if (plh instanceof interpolation) return plh.render();
-                        switch (typeof plh) {
-                            case "string":
-                                return self.arg(plh).render();
-                            case "object":   // Actual sqltt instance:
-                                if (plh instanceof Array) {
-                                    return plh
-                                        .map(interpolate)
-                                    ;
-                                };
-
-                                // Subtemplate:
-                                // ------------
-                                const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl.render();
-                                // ------------
-
-                            default:
-                                throw new Error("Wrong placehloder type: " + typeof plh);
-                        };
-                    };//}}}
-                    return placeholders
-                        .map(interpolate)
-                        .filter(x=>x!==null)
-                    ;
-                };//}}}
-
-                acompile.arg = self.arg.bind(self);
-                acompile.literal = self.literal.bind(self);
-                acompile.include = self.subTemplate.bind(self);
-
-                return acompile;
-
-            };
-
-            arg(argName) {//{{{
-                const self = this;
-                if (argName instanceof Array) return argName.map(self.arg.bind(self));
-                if (! argName.length) throw new Error("Empty placehloder name is not allowed");
-                return new interpolation (
-                    self.literals[argName] === undefined
-                        ? argName
-                        : null
-                );
-            };//}}}
-            literal() {//{{{
-                return new interpolation(null);
-                // Ignore literals while parsing arguments.
-            };//}}}
-            subTemplate(src, bindings) {//{{{
-                const self = this;
-                if (src instanceof Array) return src.map(s=>self.subTemplate(s, bindings));
-                if ( // Allow source too:
-                    typeof src.sql == "function"
-                    && ! src.getSource // sqltt objects has a sql() function too...
-                ) {
-                    src = new me.constructor(src);
-                };
-
-                // Actual sqltt instance:
-                if ("function" == typeof src.getSource) {
-                    return new interpolation (
-                        src.getSource(engineFlavour).sql(new self.constructor(bindings))
-                    );
-                };
-
-            };//}}}
-
-        };
-
-        const tplArgs = sourceTpl.sql(new argCompiler());
+        const tplArgs = sourceTpl.sql(
+            new argCompiler(me, engineFlavour)
+        );
         return hlp.sortArgs(
             sourceTpl.args || []
             , typeof tplArgs == "object" ? tplArgs : []
@@ -229,105 +123,11 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     sqltt.prototype.sql = function sql(engName = "default", cliArgs = []) {//{{{
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
-        const [eng, targettedEngName, engineFlavour] = resolveEngine(engName);
+        const engInfo = resolveEngine(engName);
+        const [eng, targettedEngName, engineFlavour] = engInfo;
         const sqlt = me.getSource(engineFlavour).sql;
 
-        class sqlCompiler {//{{{
-
-
-            constructor(literals = {}) {
-                const self = this;
-                self.literals = literals;
-
-                function scompiler(parts, ...placeholders) {//{{{
-                    const sql = [];
-
-                    function interpolate(plh, i) {//{{{
-                        if (plh instanceof interpolation) return plh.render();
-                        switch (typeof plh) {
-                            case "undefined":
-                                if (i == placeholders.length) return ""; // No placeholder at the very end.
-                            case "string":
-                                return self.arg(plh).render();
-                            case "object":   // Actual sqltt instance:
-                                if (plh instanceof Array) {
-                                    return plh
-                                        .map(interpolate)
-                                        .join(", ")
-                                    ;
-                                };
-
-                                // Subtemplate:
-                                // ------------
-                                const subTpl = self.subTemplate(plh);
-                                if (subTpl) return subTpl.render();
-                                // ------------
-
-                            default:
-                                throw new Error("Wrong placehloder type: " + typeof plh);
-                        };
-                    };//}}}
-
-                    for (let i=0; i<parts.length; i++) {
-                        sql.push(parts[i]);
-                        sql.push(interpolate(placeholders[i], i));
-                    };
-
-                    return sql.join("");
-                };//}}}
-
-                scompiler.arg = self.arg.bind(self);
-                scompiler.literal = self.literal.bind(self);
-                scompiler.include = self.subTemplate.bind(self);
-
-                return scompiler;
-
-            };
-
-            arg(argName) {//{{{
-                const self = this;
-                if (argName instanceof Array) return argName.map(s=>self.arg(s).wrap());
-                return new interpolation (
-                    hookApply (
-                        me
-                        , targettedEngName
-                        , argName
-                        , self.literals[argName] === undefined
-                            ? eng.indexer(me.argIdx[argName], argName)
-                            : self.literals[argName]
-                    )
-                );
-            };//}}}
-            literal(str) {//{{{
-                const self = this;
-                if (str instanceof Array) return str.map(s=>self.literal(s).wrap());
-                return new interpolation (
-                    hookApply(me, targettedEngName, str, str)
-                );
-            };//}}}
-            subTemplate(src, bindings = {}) {//{{{
-                const self = this;
-                if (src instanceof Array) return src
-                    .map(src2tpl)
-                    .map(
-                        s=>self
-                            .subTemplate(s, bindings)
-                            .wrap(eng.alias(s.getSource().alias))
-                    )
-                ;
-                src = src2tpl(src);
-                // Actual sqltt instance:
-                if ("function" == typeof src.getSource) {
-                    const str = src.getSource(engineFlavour).sql(new self.constructor(bindings));
-                    return new interpolation (
-                        str
-                    );
-                };
-            };//}}}
-
-        };//}}}
-
-        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler), cliArgs);
+        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, engInfo)), cliArgs);
         me.sqlCache[engName] = outSql;
         return outSql;
     };//}}}
