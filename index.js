@@ -7,7 +7,7 @@ const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
 
-function resolveEngine(engName) {//{{{
+function resolveEngine(engName = "default") {//{{{
 
     const name = engName;
     const flavour = name.replace("_cli", "");
@@ -43,12 +43,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // Private functions:
     // ------------------
 
-    function getArguments(me, engineFlavour) {//{{{
+    function getArguments(me, engName) {//{{{
         // Recursively retrieve arguments from template respecting
         // specified order (if given).
-        const sourceTpl = me.getSource(engineFlavour);
+        const eng = resolveEngine(engName);
+        const sourceTpl = me.getSource(eng.flavour);
         const tplArgs = sourceTpl.sql(
-            new argCompiler(me, engineFlavour)
+            new argCompiler(me, eng) ///// FIXME: Check if it is inexcusable to pick for engine for arguments.
         );
         return hlp.sortArgs(
             sourceTpl.args || []
@@ -122,14 +123,14 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName = "default", cliArgs = []) {//{{{
+    sqltt.prototype.sql = function sql(engName, cliArgs = []) {//{{{
         const me = this;
-        if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
         const eng = resolveEngine(engName);
+        if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
         const sqlt = me.getSource(eng.flavour).sql;
 
         const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, eng)), cliArgs);
-        me.sqlCache[engName] = outSql;
+        me.sqlCache[eng.name] = outSql;
         return outSql;
     };//}}}
     sqltt.prototype.args = function args(data = {}) {//{{{

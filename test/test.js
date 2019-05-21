@@ -115,8 +115,7 @@ describe('sqltt class', function() {
             const i2 = {sql: $=>$`s ${"i2a1"}, ${"i2a2"} f`, alias: "subq2"};
             const q1 = $=>$`s (${$.include(i1, {i1a2: "'fixed_value'"})}) as subq1 f`;
             const q2 = $=>$`s ${$.include([i1, i2], {i1a2: "'fixed_value'"})} f`;
-            //const q3 = $=>$`s * f ${$.include(q1)} as supernest`;
-            // TODO: Make nesting to work...
+            const q3 = $=>$`s * f ${$.include(q1)} as supernest`;
 
             // q1:
             assert.equal(
@@ -132,11 +131,11 @@ describe('sqltt class', function() {
                 hsql(q2, "oracle")
                 , "s (s :1, 'fixed_value' f) subq1, (s :2, :3 f) subq2 f"
             );
-            // // q3:
-            // assert.equal(
-            //     hsql(q3)
-            //     , "s (s $1, 'fixed_value' f) as subq1 f"
-            // );
+            // q3:
+            assert.equal(
+                hsql(q3)
+                , "s * f s (s $1, 'fixed_value' f) as subq1 f as supernest"
+            );
 
             assert.deepStrictEqual(
                 hargl(q2)
