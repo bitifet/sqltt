@@ -9,8 +9,9 @@ const sqlCompiler = require("./lib/sqlCompiler");
 
 function resolveEngine(engName) {//{{{
 
-    const targettedEngName = engName;
-    const isCli = (targettedEngName || "").match(/^(?:(\w+)_)?cli$/);
+    const name = engName;
+    const flavour = name.replace("_cli", "");
+    const isCli = (name || "").match(/^(?:(\w+)_)?cli$/);
 
     if (engName == "cli") {
         const requestedEngine = process.env[ENGINE_ENV_VAR];
@@ -29,9 +30,10 @@ function resolveEngine(engName) {//{{{
     const eng = engines[engName];
     if (! eng) throw new Error ("Unknown database engine: " + engName);
 
-    const engineFlavour = targettedEngName.replace("_cli", "");
-
-    return [eng, targettedEngName, engineFlavour];
+    return Object.assign({
+        name,
+        flavour,
+    }, eng);
 
 };//}}}
 
@@ -77,13 +79,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         );
         if (typeof me.source.altsql == "object") {
             const mainArgs = JSON.stringify(me.argList);
-            for (let engName in me.source.altsql) {
-                if (typeof me.source.altsql[engName] != "function") throw new Error (
-                    "Wrong template format: alternative sql for "+engName+" must be a function."
+            for (let engFlav in me.source.altsql) {
+                if (typeof me.source.altsql[engFlav] != "function") throw new Error (
+                    "Wrong template format: alternative sql for "+engFlav+" must be a function."
                 );
-                const args = getArguments(me, engName);
+                const args = getArguments(me, engFlav);
                 if (JSON.stringify(args) !== mainArgs) throw new Error (
-                    "Arguments mismatch in alternative sql for "+engName+"."
+                    "Arguments mismatch in alternative sql for "+engFlav+"."
                 );
             };
         };
@@ -123,11 +125,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     sqltt.prototype.sql = function sql(engName = "default", cliArgs = []) {//{{{
         const me = this;
         if (me.sqlCache[engName] !== undefined) return me.sqlCache[engName];
-        const engInfo = resolveEngine(engName);
-        const [eng, targettedEngName, engineFlavour] = engInfo;
-        const sqlt = me.getSource(engineFlavour).sql;
+        const eng = resolveEngine(engName);
+        const sqlt = me.getSource(eng.flavour).sql;
 
-        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, engInfo)), cliArgs);
+        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, eng)), cliArgs);
         me.sqlCache[engName] = outSql;
         return outSql;
     };//}}}
