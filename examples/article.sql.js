@@ -28,13 +28,5 @@ const q = {                // Define multiple named query templates.
     ` /* @@/sql@@ */),
 }
 
-module.exports = q;                      // Exports it.
-if (! module.parent) {
-    const args = process.argv.slice(2);  // Get shell arguments.
-    const qId = args.shift()             // Extract first as query id.
-    console.log (qId
-        ?  q[qId].sql('cli', args)       // Render query if selected
-        : "Available queries: " + Object.keys(q).join(", ")
-    );  // ...and provide available queries list if no argument provided.
-};
+sqltt.publish(module, q);
 

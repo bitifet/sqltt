@@ -164,6 +164,26 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         });
     };//}}}
 
+
+    // Static mehtods:
+    // ---------------
+
+    sqltt.publish = function publish(module, qSrc) {//{{{
+        module.exports = qSrc;                  // Exports it.
+        if (! module.parent) {
+            const args = process.argv.slice(2);  // Get shell arguments.
+            if (qSrc instanceof sqltt) {
+                console.log(qSrc.sql('cli', process.argv.slice(2)));
+            } else {
+                const qId = args.shift()             // Extract first as query id.
+                console.log (qId
+                    ?  qSrc[qId].sql('cli', args)       // Render query if selected
+                    : "Available queries: " + Object.keys(qSrc).join(", ")
+                );  // ...and provide available queries list if no argument provided.
+            };
+        };
+    };//}}}
+
     return sqltt;
 
 })();
