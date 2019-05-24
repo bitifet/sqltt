@@ -67,7 +67,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (typeof me.source.sql === "string") {
             // Accept string if no argument interpolation needed
             const sqlStr = me.source.sql;
-            me.source.sql = ()=>sqlStr;
+            me.source.sql = $=>$`${$.literal(sqlStr)}`;
         };
         me.argList = getArguments(me);
         me.argIdx = hlp.indexArgs(me.argList);

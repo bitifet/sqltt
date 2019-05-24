@@ -24,6 +24,9 @@ TO-DO
 
   * Start writing out good manual ;-)
 
+  * Improve .concat() concatenation (check for trailing space/return and add if
+    neccessary).
+
 
 Notes
 -----
