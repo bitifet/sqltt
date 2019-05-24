@@ -25,9 +25,15 @@ q.show = new sqltt( /* @@sql@@ */ $=>$`
     where id = ${"id"}
 ` /* @@/sql@@ */);
 
-q.create = new sqltt( /* @@sql@@ */ $=>$`
-    insert into articles (sectionId, title, body)
-    values (${"sectionId"}, ${"title"}, ${"body"})
+const fields = ['sectionId', 'title', 'body'];
+q.insert = new sqltt( /* @@sql@@ */ $=>$`
+    insert into articles (${$.keys(fields)})
+    values (${$.values(fields)})
+` /* @@/sql@@ */);
+
+q.update = new sqltt( /* @@sql@@ */ $=>$`
+    update articles set ${$.both(fields)}
+    where id = ${"id"}
 ` /* @@/sql@@ */);
 
 sqltt.publish(module, q);

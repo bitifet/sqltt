@@ -16,7 +16,8 @@
     "string",
     "template",
     "TaggedTemplates",
-    "database"
+    "database",
+    "DRY"
   ],
   "author": "Joan Miquel Torres <jmtorres@112ib.com>",
   "license": "GPL-3.0",
