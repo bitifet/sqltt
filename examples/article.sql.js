@@ -2,7 +2,7 @@
 // ==============
 // (Query compilation example)
 "use strict";
-const sqltt = require("../");
+const sqltt = require("../"); // sqltt
 
 // Define multiple named query templates.
 const q = {};
@@ -32,7 +32,7 @@ q.insert = new sqltt( /* @@sql@@ */ $=>$`
 ` /* @@/sql@@ */);
 
 q.update = new sqltt( /* @@sql@@ */ $=>$`
-    update articles set ${$.both(fields)}
+    update articles set ${$.entries(fields)}
     where id = ${"id"}
 ` /* @@/sql@@ */);
 

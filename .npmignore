@@ -1,4 +1,8 @@
 node_modules
 **/*.sw*
 examples
+tests
 CHANGELOG.txt
+LICENSE
+TODO.md
+doc

@@ -4,7 +4,7 @@ TO-DO list & notes
 TO-DO
 -----
 
-  * DOCUMENTATE `$.keys(obj)`, `$.values(obj)` and `$.both(obj)` to retrieve
+  * DOCUMENTATE `$.keys(obj)`, `$.values(obj)` and `$.entries(obj)` to retrieve
     comma separated lists of, respectively, *obj* keys (as literals), *obj*
     values (mapped through `$.arg()`) and pairs of the former joined by '='.
     This will ease the building of large insert or updates based on
@@ -16,7 +16,7 @@ TO-DO
     - If returns a true value, *thenPart* is rendered.
     - Else *elsePart* is rendered instead.
     - *thenPart* and *elsePart* could be from simple string literals to whole
-      subtemplates.
+      subtemplates, arguments, etc...
 
   * Rename .sql()'s *cliArgs* argument to simply *args*.
     - Allow them to be simple array of argument names (to specify which are

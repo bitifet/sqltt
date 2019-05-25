@@ -19,7 +19,7 @@
     "database",
     "DRY"
   ],
-  "author": "Joan Miquel Torres <jmtorres@112ib.com>",
+  "author": "Joan Miquel Torres <joanmi@bitifet.net>",
   "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/bitifet/sqltt/issues"
