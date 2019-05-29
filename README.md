@@ -8,22 +8,28 @@ Index
 
 <!-- vim-markdown-toc GitLab -->
 
-* [Abstract](#abstract)
-* [Features](#features)
-* [Setup and Usage](#setup-and-usage)
-    * [Single-query template files:](#single-query-template-files)
-    * [Mulitple-query template files:](#mulitple-query-template-files)
-        * [*template* parts:](#template-parts)
-        * [Valid *options*:](#valid-options)
-* [Usage Examples](#usage-examples)
-    * [From NodeJS application:](#from-nodejs-application)
-    * [From console](#from-console)
-    * [Query Splitting](#query-splitting)
-* [TODO](#todo)
-* [Contributing](#contributing)
+* [UPDATED:](#updated)
+    * [Abstract](#abstract)
+    * [Features](#features)
+* [OUTDATED:](#outdated)
+    * [Setup and Usage](#setup-and-usage)
+        * [Single-query template files:](#single-query-template-files)
+        * [Mulitple-query template files:](#mulitple-query-template-files)
+            * [*template* parts:](#template-parts)
+            * [Valid *options*:](#valid-options)
+    * [Usage Examples](#usage-examples)
+        * [From NodeJS application:](#from-nodejs-application)
+        * [From console](#from-console)
+    * [TODO](#todo)
+    * [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
+
+UPDATED:
+========
+
+(Future 1.0.0 version)
 
 Abstract
 --------
@@ -42,44 +48,89 @@ possible features I have been adding over time.
 Features
 --------
 
-  * Very simple and readable templates.
-
-  * Readable strings as placeholders instead of `$1`, `$2`, etc...
-    - They are automatically replaced when rendering the query.
-
-  * Nestable queries:
-    - If placeholder is another *sqltt* template or instance, it is
-      automatically nested in place (assuming/merging its arguments too).
-    - Can be nested with some (or all) parameters previously fixed (using two
-      elements array: one for the nested query and the other for a JSON
-      argument linterals sepcification).
-    - TODO: Deep nesting not yet working (only one level).
-
-  * Multiple database engine support. Placeholderers and other tweaks get
-    automatically generated in proper syntax.
-
-  * Can generate both: queries to be used programatically and specific database
-    cli text to easily test queries from console (see examples).
+  * Very simple and readable templates. Multiple formats:
+    - Arguments in given order: `{args: ["baz"], sql: $=>$\`select foo from bar where baz = ${"baz"}\`}`.
+    - Arguments in appearence order: `$=>$\`select foo from bar where baz = ${"baz"}\` `.
+    - Simple string: `"select foo from bar"` (no argumments in this case)
+    - Readable strings as argument placeholders instead of `$1`, `$2`, etc...
 
   * Easy arguments hanling:
     - Order can be explicitly (and even partially) specified in the `args`
       template property.
     - Non specified arguments are automatically fulfilled in query appearing
       order.
-    - Arguments generation method provided.
-      + Receives json object with key:value pairs.
-      + Returns an array in the proper order.
-      + Not needed properties are silently ignored.
+
+  * Arguments generator helper:
+    - Returns an array in the proper order.
+    - Unused arguments are ignored and not needed properties are silently
+      ignored.
+    - Ex.: `myTpl.args({foo: "fooVal", bar: "barVal"})`.
+
+  * Multiple database engine support (`const myTpl = new sqltt(...)`):
+    - PostgreSQL: `myTpl.sql('postgresql') // select [...] where baz = $1`
+    - Oracle: `myTpl.sql('oracle')'        // select [...] where baz = :1`
+    - Default: `myTpl.sql()                // select [...] where baz = $1`
+    - Others may be easily added.
+
+  * Database Cli syntax support:
+    - PostgreSQL: `myTpl.sql('postgresql_cli') // select [...] where baz = :baz`
+    - Auto: `myTpl.sql('cli') // Default unless SQLTT_ENGINE env var defined`
+
+  * Publishing helper: `sqltt.publish(module, myTpl);`
+    - Assigns `myTpl` to `module.exports` (so exports it).
+    - If template file is directly invoked, outputs *cli* SQL to stdout.
+      - `node myTpl.sql.js` outputs general cli output.
+      - `SQLTT_ENGINE=postgresql node myTpl.sql.js` outputs postgresql
+        flavoured cli output.
+    - If myTpl is a *key: value* object instead, first argument is expected to
+      select which query is required.
+      - Ex.: `node myTplLib.sql.js listQuery`
+      - If no argument provided in this case, a list of available keys will be
+        shown instead.
+    - Additional arguments are wrapped in a *set* commands in order to populate
+      arguments.
+      - Ex.: `node myTpl.sql parameter1 parameter2 "third parameter"`
+      - Ex.: `node myTplLib.sql listBySection sectionId`
+
+  * Direct execution: standard output can obviously redirected to any database
+    sql interpreter.
+    - Ex.: `node myTplLib someQuery value1 "second value" | psql myDb`
+
+  * Query nesting: If, instead of a regular string, another *sqltt* instance is
+    interpolated, it will be correctly rendered in place and even its argument
+    declarations will be conveniently assumed in the right order and without
+    duplications.
+    - Ex.: `$=>$\`${listQuery} and typeid = ${"tid"}\` `.
+
+  * Advanced Interpolation Api: When `$=>$\`...\` ` form is used, the tag
+    function ("$" argument) comes with a bunch of methods providing more advanced
+    functionalities.
+    - In fact, `${"someArg"}` is, in fact, a shorthand for `${$.arg("someArg"})}`.
+    - ...and `${someSubtemplate}` is the same as `${$.include(someSubtemplate)}`.
+    - But they can take more arguments. Ex.: `${$.include(someSubtemplate,
+      {arg1: "fixedValue"})}`
+    - And there are a few more:
+      - `$.literal()`
+      - `$.keys()` and `$.values()`.
+        - Ex.: `insert into foo (${$.keys(someObj)}) values (${$.values(someObj)})`
+      - `$.entries()`.
+        - Ex.: `update foo set ${$.entries(someObj)} where ...`
+      - And more comming (`$.if(cnd, thenCase, elseCase)`, ...).
+
+  * Query Caché:
+    - SQL for every database are generated and cached the first time they're
+      required and then always consumed from caché.
 
   * SQL Syntax Hilighting in your preferred editor:
     - By using .sql extension instead of .js (despite the little js overhead).
     - By `-- @@/sql@@`and `-- @@/sql@@` comments [in
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
 
-  * Query Caché:
-    - SQL for every database are generated and cached the first time they're
-      required and then always consumed from caché.
 
+OUTDATED:
+=========
+
+(from version 0.3.1 and earlier)
 
 Setup and Usage
 ---------------
@@ -381,6 +432,10 @@ the query. Otherwise it remains untouched.
 
 >
 **NOTE:** Hooks can also be applied to non argument keywords. To do so we need
+interpolate them using [literal() tag method](#literalstr).
+>
+
+
 to escape them as if it were real arguments and then wrap it as an array. This
 will avoid its interpolation as argument.
 >
@@ -475,22 +530,10 @@ db.queryRows(
 ).then(rows=>console.log(rows);
 ```
 
-### Query Splitting
-
-Another *sqltt* instance's method is `.split(<engineType>)`.
-
-This method picks the SQL for the specified engine (or default one if not
-specified or there isn't *altsql* specification for it) and splits it by all
-contained semicolons (`;`).
-
-It retruns an array of new *sqltt* instances for those subqueries.
-
 
 
 TODO
 ----
-
-  * Implement per-engine SQL alternatives
 
   * Improve this README file.
 

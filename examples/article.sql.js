@@ -26,6 +26,7 @@ q.show = new sqltt( /* @@sql@@ */ $=>$`
 ` /* @@/sql@@ */);
 
 const fields = ['sectionId', 'title', 'body'];
+//const fields = {sectionId: 'sectionId', title: 'title', body: 'contents'};
 q.insert = new sqltt( /* @@sql@@ */ $=>$`
     insert into articles (${$.keys(fields)})
     values (${$.values(fields)})

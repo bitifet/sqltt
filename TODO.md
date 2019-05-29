@@ -4,6 +4,14 @@ TO-DO list & notes
 TO-DO
 -----
 
+  * Implement a "default_engine" property so in templates having this key
+    defined .sql() (and even .args()) will default to specified engine syntax if
+    no other explicitly specified.
+
+  * Provide an option to decide, in cli output, wether non specified arguments
+    will default to empty strings or its *set* commands not rendered at all (in
+    order to respect previously setted values).
+
   * DOCUMENTATE `$.keys(obj)`, `$.values(obj)` and `$.entries(obj)` to retrieve
     comma separated lists of, respectively, *obj* keys (as literals), *obj*
     values (mapped through `$.arg()`) and pairs of the former joined by '='.
