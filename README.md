@@ -11,8 +11,12 @@ Index
 * [UPDATED:](#updated)
     * [Abstract](#abstract)
     * [Features](#features)
-* [OUTDATED:](#outdated)
     * [Setup and Usage](#setup-and-usage)
+        * [Package setup](#package-setup)
+        * [Writing templates](#writing-templates)
+        * [Usage](#usage)
+    * [Template Format](#template-format)
+* [OUTDATED:](#outdated)
         * [Single-query template files:](#single-query-template-files)
         * [Mulitple-query template files:](#mulitple-query-template-files)
             * [*template* parts:](#template-parts)
@@ -49,8 +53,8 @@ Features
 --------
 
   * Very simple and readable templates. Multiple formats:
-    - Arguments in given order: `{args: ["baz"], sql: $=>$\`select foo from bar where baz = ${"baz"}\`}`.
-    - Arguments in appearence order: `$=>$\`select foo from bar where baz = ${"baz"}\` `.
+    - Arguments in given order: `{args: ["baz"], sql: $=>$``select foo from bar where baz = ${"baz"}``}`.
+    - Arguments in appearence order: `$=>$``select foo from bar where baz = ${"baz"}`` `.
     - Simple string: `"select foo from bar"` (no argumments in this case)
     - Readable strings as argument placeholders instead of `$1`, `$2`, etc...
 
@@ -100,9 +104,9 @@ Features
     interpolated, it will be correctly rendered in place and even its argument
     declarations will be conveniently assumed in the right order and without
     duplications.
-    - Ex.: `$=>$\`${listQuery} and typeid = ${"tid"}\` `.
+    - Ex.: `$=>$``${listQuery} and typeid = ${"tid"}`` `.
 
-  * Advanced Interpolation Api: When `$=>$\`...\` ` form is used, the tag
+  * Advanced Interpolation Api: When `$=>$``...`` ` form is used, the tag
     function ("$" argument) comes with a bunch of methods providing more advanced
     functionalities.
     - In fact, `${"someArg"}` is, in fact, a shorthand for `${$.arg("someArg"})}`.
@@ -127,16 +131,85 @@ Features
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
 
 
+Setup and Usage
+---------------
+
+### Package setup
+
+Install *sqltt* executing `npm install --save sqltt` within your
+project directory.
+
+
+### Writing templates
+
+Every template file may contain single template or multiple *SQLTT* templates
+and may export them in its source form as already constructed *SQLTT*
+instances.
+
+But preferred way is as follows:
+
+**For single template:**
+
+```javascript
+const sqltt = require("sqltt");
+const tpl = new sqltt(
+    /* Template source in any valid format */
+);
+sqltt.publish(module, tpl);
+```
+
+**For multiple templates:**
+
+```javascript
+const sqltt = require("sqltt");
+const tpl = {
+    aQuery: new sqltt( /* ... */),
+    anotherQuery: new sqltt( /* ... */),
+    /* ... */
+};
+sqltt.publish(module, tpl);
+```
+
+
+See [Template Format](#template-format) below  (.....)
+
+
+### Usage
+
+The final `sqltt.publish(module, tpl)` replaces classic `module.exports = tpl`
+and is almost equivalent to:
+
+```javascript
+module.exports = tpl;                      // Exports template.
+module.parent || console.log(              // Allow cli usage.
+    tpl.sql('cli', process.argv.slice(2))  // Passing shell arguments.
+);
+```
+
+>
+In fact it is slightly more complicated in order to properly hanle
+multiple-template files too as we will see below.
+>
+
+This allows us to use our constructed sqltt instances:
+
+1. As a library from NodeJS application.
+2. As a command line tool to get *whatever_our_database_cli suitable* rendered
+   SQL.
+
+
+
+Template Format
+---------------
+
+
+
+
 OUTDATED:
 =========
 
 (from version 0.3.1 and earlier)
 
-Setup and Usage
----------------
-
-To install *sqltt* symply execute `npm install --save sqltt` within your
-project directory.
 
 ### Single-query template files:
 
