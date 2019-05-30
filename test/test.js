@@ -1,6 +1,14 @@
 const assert = require('assert');
 const sqltt = require('../');
 
+// TO-DO list
+// ==========
+//
+//   * Test engine selection:
+//     - By environment var.
+//     - By template default.
+//     - By explicit specification (.sql(eng) / .args(eng))
+//     - By absolute default ("default")
 
 // Helpers
 // =======
