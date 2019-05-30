@@ -53,13 +53,13 @@ Features
 --------
 
   * Very simple and readable templates. Multiple formats:
-    - Arguments in given order: `{args: ["baz"], sql: $=>$``select foo from bar where baz = ${"baz"}``}`.
-    - Arguments in appearence order: `$=>$``select foo from bar where baz = ${"baz"}`` `.
-    - Simple string: `"select foo from bar"` (no argumments in this case)
-    - Readable strings as argument placeholders instead of `$1`, `$2`, etc...
+    - Arguments in given order: ``{args: ["baz"], sql: $=>$`select foo from bar where baz = ${"baz"}`}``.
+    - Arguments in appearence order: ``$=>$`select foo from bar where baz = ${"baz"}` ``.
+    - Simple string: ``"select foo from bar"`` (no argumments in this case)
+    - Readable strings as argument placeholders instead of ``$1``, ``$2``, etc...
 
   * Easy arguments hanling:
-    - Order can be explicitly (and even partially) specified in the `args`
+    - Order can be explicitly (and even partially) specified in the ``args``
       template property.
     - Non specified arguments are automatically fulfilled in query appearing
       order.
@@ -68,58 +68,58 @@ Features
     - Returns an array in the proper order.
     - Unused arguments are ignored and not needed properties are silently
       ignored.
-    - Ex.: `myTpl.args({foo: "fooVal", bar: "barVal"})`.
+    - Ex.: ``myTpl.args({foo: "fooVal", bar: "barVal"})``.
 
-  * Multiple database engine support (`const myTpl = new sqltt(...)`):
-    - PostgreSQL: `myTpl.sql('postgresql') // select [...] where baz = $1`
-    - Oracle: `myTpl.sql('oracle')'        // select [...] where baz = :1`
-    - Default: `myTpl.sql()                // select [...] where baz = $1`
+  * Multiple database engine support (``const myTpl = new sqltt(...)``):
+    - PostgreSQL: ``myTpl.sql('postgresql') // select [...] where baz = $1``
+    - Oracle: ``myTpl.sql('oracle')'        // select [...] where baz = :1``
+    - Default: ``myTpl.sql()                // select [...] where baz = $1``
     - Others may be easily added.
 
   * Database Cli syntax support:
-    - PostgreSQL: `myTpl.sql('postgresql_cli') // select [...] where baz = :baz`
-    - Auto: `myTpl.sql('cli') // Default unless SQLTT_ENGINE env var defined`
+    - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
+    - Auto: ``myTpl.sql('cli') // Default unless SQLTT_ENGINE env var defined``
 
-  * Publishing helper: `sqltt.publish(module, myTpl);`
-    - Assigns `myTpl` to `module.exports` (so exports it).
+  * Publishing helper: ``sqltt.publish(module, myTpl);``
+    - Assigns ``myTpl`` to ``module.exports`` (so exports it).
     - If template file is directly invoked, outputs *cli* SQL to stdout.
-      - `node myTpl.sql.js` outputs general cli output.
-      - `SQLTT_ENGINE=postgresql node myTpl.sql.js` outputs postgresql
+      - ``node myTpl.sql.js`` outputs general cli output.
+      - ``SQLTT_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
         flavoured cli output.
     - If myTpl is a *key: value* object instead, first argument is expected to
       select which query is required.
-      - Ex.: `node myTplLib.sql.js listQuery`
+      - Ex.: ``node myTplLib.sql.js listQuery``
       - If no argument provided in this case, a list of available keys will be
         shown instead.
     - Additional arguments are wrapped in a *set* commands in order to populate
       arguments.
-      - Ex.: `node myTpl.sql parameter1 parameter2 "third parameter"`
-      - Ex.: `node myTplLib.sql listBySection sectionId`
+      - Ex.: ``node myTpl.sql parameter1 parameter2 "third parameter"``
+      - Ex.: ``node myTplLib.sql listBySection sectionId``
 
   * Direct execution: standard output can obviously redirected to any database
     sql interpreter.
-    - Ex.: `node myTplLib someQuery value1 "second value" | psql myDb`
+    - Ex.: ``node myTplLib someQuery value1 "second value" | psql myDb``
 
   * Query nesting: If, instead of a regular string, another *sqltt* instance is
     interpolated, it will be correctly rendered in place and even its argument
     declarations will be conveniently assumed in the right order and without
     duplications.
-    - Ex.: `$=>$``${listQuery} and typeid = ${"tid"}`` `.
+    - Ex.: ``$=>$`${listQuery} and typeid = ${"tid"}` ``.
 
-  * Advanced Interpolation Api: When `$=>$``...`` ` form is used, the tag
+  * Advanced Interpolation Api: When ``$=>$`...` `` form is used, the tag
     function ("$" argument) comes with a bunch of methods providing more advanced
     functionalities.
-    - In fact, `${"someArg"}` is, in fact, a shorthand for `${$.arg("someArg"})}`.
-    - ...and `${someSubtemplate}` is the same as `${$.include(someSubtemplate)}`.
-    - But they can take more arguments. Ex.: `${$.include(someSubtemplate,
-      {arg1: "fixedValue"})}`
+    - In fact, ``${"someArg"}`` is, in fact, a shorthand for ``${$.arg("someArg"})}``.
+    - ...and ``${someSubtemplate}`` is the same as ``${$.include(someSubtemplate)}``.
+    - But they can take more arguments. Ex.: ``${$.include(someSubtemplate,
+      {arg1: "fixedValue"})}``
     - And there are a few more:
-      - `$.literal()`
-      - `$.keys()` and `$.values()`.
-        - Ex.: `insert into foo (${$.keys(someObj)}) values (${$.values(someObj)})`
-      - `$.entries()`.
-        - Ex.: `update foo set ${$.entries(someObj)} where ...`
-      - And more comming (`$.if(cnd, thenCase, elseCase)`, ...).
+      - ``$.literal()``
+      - ``$.keys()`` and ``$.values()``.
+        - Ex.: ``insert into foo (${$.keys(someObj)}) values (${$.values(someObj)})``
+      - ``$.entries()``.
+        - Ex.: ``update foo set ${$.entries(someObj)} where ...``
+      - And more comming (``$.if(cnd, thenCase, elseCase)``, ...).
 
   * Query Caché:
     - SQL for every database are generated and cached the first time they're
@@ -127,7 +127,7 @@ Features
 
   * SQL Syntax Hilighting in your preferred editor:
     - By using .sql extension instead of .js (despite the little js overhead).
-    - By `-- @@/sql@@`and `-- @@/sql@@` comments [in
+    - By ``-- @@/sql@@``and ``-- @@/sql@@`` comments [in
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
 
 
@@ -136,7 +136,7 @@ Setup and Usage
 
 ### Package setup
 
-Install *sqltt* executing `npm install --save sqltt` within your
+Install *sqltt* executing ``npm install --save sqltt`` within your
 project directory.
 
 
@@ -176,7 +176,7 @@ See [Template Format](#template-format) below  (.....)
 
 ### Usage
 
-The final `sqltt.publish(module, tpl)` replaces classic `module.exports = tpl`
+The final ``sqltt.publish(module, tpl)`` replaces classic ``module.exports = tpl``
 and is almost equivalent to:
 
 ```javascript
@@ -229,9 +229,9 @@ module.parent || console.log(               // Allow cli usage.
 
 **Where:**
 
-  * `template`: Defines the template and possibly other parameters (see
+  * ``template``: Defines the template and possibly other parameters (see
           [template parts:](#template-parts) below).
-  * `options`: Optional *options* object to specify a few behavioral modifiers.
+  * ``options``: Optional *options* object to specify a few behavioral modifiers.
 
 **Usage Examples:**
 
@@ -307,17 +307,17 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
 
 #### *template* parts:
 
-  * `sql`: **(Mandatory)** Actual SQL template of the following form (See
+  * ``sql``: **(Mandatory)** Actual SQL template of the following form (See
     [examples](#template-examples) below):
 ```
   $=>$`(sql here)` 
 ```
-  * `args`: **(Optional)** Array of strings declaring argument names (and its
+  * ``args``: **(Optional)** Array of strings declaring argument names (and its
     order).
-  * `altsql`: **(Optional)** Let to provide alternative queries for given
+  * ``altsql``: **(Optional)** Let to provide alternative queries for given
     engines when compatibility hooks aren't enough.
   * alias: **(Optional)** Provide an alias name to be used in case of de whole
-    query being included beside others through `$.include([subq1, ...])`.
+    query being included beside others through ``$.include([subq1, ...])``.
 
 
 #### Valid *options*:
@@ -410,7 +410,7 @@ module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
 >
-**NOTE:** `/* @@sql@@ */` and `/* @@/sql@@ */` comments are optional (and, for
+**NOTE:** ``/* @@sql@@ */`` and ``/* @@/sql@@ */`` comments are optional (and, for
 the sake of simplicity, I won't use them again in this document.
 >
 I only left them once because I'm sure that vim users [will enjoy
@@ -432,8 +432,8 @@ module.exports = $ => ({
 ```
 
 >
-**NOTE:** This version should be used to instantiate *sqltt* (e.g: `const
-myQuery = new sqltt(require("path/to/myQuery.sql.js"))`) and connot be used
+**NOTE:** This version should be used to instantiate *sqltt* (e.g: ``const
+myQuery = new sqltt(require("path/to/myQuery.sql.js"))``) and connot be used
 [from console](#from-console).
 >
 The only advantadge of this approach is that we can bundle many queries in
@@ -488,7 +488,7 @@ Currently supported engines are:
 ### Adding more Database Engines
 
 If you are interested in adding more engines or improving existing ones, check
-`lib/engines.js` file (They're too easy to implement) and please, feel free to
+``lib/engines.js`` file (They're too easy to implement) and please, feel free to
 send me patches to include your improvements.
 
 
@@ -583,11 +583,11 @@ order is hardly encouraged.
 
 ### String Concatenation
 
-*sqltt* template instances provide a `.concat(<string>)` method returning a new
-instance whose `sql(<whatever>)` method will return provided string
+*sqltt* template instances provide a ``.concat(<string>)`` method returning a new
+instance whose ``sql(<whatever>)`` method will return provided string
 concatenated at the end.
 
-This is useful to add simple clauses such as `limit`, `order by` or `group by`
+This is useful to add simple clauses such as ``limit``, ``order by`` or ``group by``
 from our application logic.
 
 **Example:**
