@@ -15,6 +15,11 @@ Index
         * [Package setup](#package-setup)
         * [Writing templates](#writing-templates)
         * [Usage](#usage)
+            * [From application](#from-application)
+            * [From CLI](#from-cli)
+                * [Providing arguments](#providing-arguments)
+                * [Executing queries](#executing-queries)
+                * [Selecting Engine Flavour](#selecting-engine-flavour)
     * [Template Format](#template-format)
 * [OUTDATED:](#outdated)
         * [Single-query template files:](#single-query-template-files)
@@ -58,6 +63,9 @@ Features
     - Simple string: ``"select foo from bar"`` (no argumments in this case)
     - Readable strings as argument placeholders instead of ``$1``, ``$2``, etc...
 
+  * Write SQL [for your application](#from-application) and test them [from
+    CLI](#executing-queries) without changing anything.
+
   * Easy arguments hanling:
     - Order can be explicitly (and even partially) specified in the ``args``
       template property.
@@ -76,16 +84,16 @@ Features
     - Default: ``myTpl.sql()                // select [...] where baz = $1``
     - Others may be easily added.
 
-  * Database Cli syntax support:
+  * Database CLI syntax support:
     - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
     - Auto: ``myTpl.sql('cli') // Default unless SQLTT_ENGINE env var defined``
 
   * Publishing helper: ``sqltt.publish(module, myTpl);``
     - Assigns ``myTpl`` to ``module.exports`` (so exports it).
-    - If template file is directly invoked, outputs *cli* SQL to stdout.
+    - If template file is directly invoked, outputs *CLI* SQL to stdout.
       - ``node myTpl.sql.js`` outputs general cli output.
       - ``SQLTT_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
-        flavoured cli output.
+        flavoured CLI output.
     - If myTpl is a *key: value* object instead, first argument is expected to
       select which query is required.
       - Ex.: ``node myTplLib.sql.js listQuery``
@@ -142,9 +150,8 @@ project directory.
 
 ### Writing templates
 
-Every template file may contain single template or multiple *SQLTT* templates
-and may export them in its source form as already constructed *SQLTT*
-instances.
+Every template file may contain single or multiple *SQLTT* templates and may
+export them either in its source form as already constructed *SQLTT* instances.
 
 But preferred way is as follows:
 
@@ -170,18 +177,18 @@ const tpl = {
 sqltt.publish(module, tpl);
 ```
 
-
-See [Template Format](#template-format) below  (.....)
+See [Template Format](#template-format) below to learn about the syntax of
+template sources.
 
 
 ### Usage
 
-The final ``sqltt.publish(module, tpl)`` replaces classic ``module.exports = tpl``
-and is almost equivalent to:
+The final ``sqltt.publish(module, tpl)`` statement in previous examples
+replaces classic ``module.exports = tpl`` and is almost equivalent to:
 
 ```javascript
 module.exports = tpl;                      // Exports template.
-module.parent || console.log(              // Allow cli usage.
+module.parent || console.log(              // Allow CLI usage.
     tpl.sql('cli', process.argv.slice(2))  // Passing shell arguments.
 );
 ```
@@ -196,6 +203,136 @@ This allows us to use our constructed sqltt instances:
 1. As a library from NodeJS application.
 2. As a command line tool to get *whatever_our_database_cli suitable* rendered
    SQL.
+
+
+#### From application
+
+**Single Template Example:**
+
+```javascript
+const myQuery = require('path/to/myTemplate.sql.js');
+const sql = myQuery.sql('postgresql');
+const args = myQuery.args({
+    arg1: "val1",
+    arg2: "val2",
+    /* ... */
+});
+
+// myDb.query(sql, args);
+```
+
+> **NOTE:** The ``'postgresql'`` argument in ``myQuery.sql('postgresql')``
+> statement tells *SQLTT* to render *PostgreSQL* flavoured SQL syntax.
+>
+> Nowadays ``'postgresql'`` and ``'default'`` engine flavours works just the
+> same. But other databases may have some nuances such as Oracle's way to specify
+> arguments as ``:1``, ``:2``... instead of ``$1``, ``$2``...
+>
+> Additionally, templates can specify a ``default_engine`` property to override
+> the default one.
+
+
+**Multiple Template Example:**
+
+```javascript
+const myQueries = require('path/to/myTemplate.sql.js');
+const userList_sql = myQueries.userList.sql('postgresql');
+const userProfile_sql = myQueies.userProfile.sql('postgresql');
+
+const userProfile_args = myQueries.userProfile.args({
+    userId: "someId",
+    /* ... */
+});
+
+// myDb.query(userList_sql, []);
+// myDb.query(userProfile_sql, userProfile_args);
+
+```
+
+
+#### From CLI
+
+From command line we just need to execute our template through *node*:
+
+```sh
+node path/to/myTemplate.sql.js
+```
+
+If it is a single template file it will directly render its SQL.
+
+Otherwise, and if no arguments provided, it will output a list of available
+queries.
+
+**Example:**
+
+```sh
+user@host:~/examples$ node users.sql.js
+Available queries: list, getProfile, insert, update
+```
+
+...then we just need to pick from the desired query to render:
+
+```sh
+user@host:~/examples$ node users.sql.js list
+
+select * from users;
+
+```
+
+
+##### Providing arguments
+
+If our query requires arguments, we can feed it simply adding them to the
+command line:
+
+**Example:**
+
+```sh
+user@host:~/examples$ node users.sql.js getProfile 23
+
+\set user_id '''23'''
+    select *
+    from users
+    where id = :user_id
+
+```
+
+> **NOTE:** From command line, when an argument is numeric, we can't tell whether
+> it is intended to be an actual number type or string.
+>
+> For this reason all arguments are quoted unconditionally given that most
+> database engines will automatically cast them as numbers when needed.
+
+
+##### Executing queries
+
+```sh
+user@host:~/examples$ node users.sql.js list | psql tiaDB
+
+ id |   name    | sex | dpt  |   birth    |           ctime
+----+-----------+-----+------+------------+----------------------------
+  1 | Mortadelo | m   | oper | 1969-03-10 | 2019-05-31 10:58:09.346467
+  2 | Filemon   | m   | oper | 1965-08-15 | 2019-05-31 10:58:46.291629
+  3 | Ofelia    | f   | adm  | 1972-08-29 | 2019-05-31 11:05:16.594719
+  4 | Bacterio  | m   | it   | 1965-08-15 | 2019-05-31 11:05:35.807663
+(...)
+```
+
+
+##### Selecting Engine Flavour
+
+To render SQL from CLI, *default_cli* engine is selected by default except if
+``default_engine`` property is defined in template source. For example, for
+``temlate_engine: "postgresql"``, *postgresqsl_cli* will be picked for instead.
+
+On the other hand, in case we want to specifically pick for given database
+engine flavour when we are going to generate SQL from *CLI*, we can set the
+*SQLTT_ENGINE* environment variable in our shell either by:
+
+  a) Exporting it (Ex.: ``export SQLTT_ENGINE=postgresql``).
+
+  b) Setting just for single execution (Ex.: ``SQLTT_ENGINE=oracle node
+      myTpl.sql.js ...```).
 
 
 
@@ -222,7 +359,7 @@ Template structure will usually be as follows:
 const sqltt = require("sqltt");             // Require sqltt
 const q = new sqltt(template, options);     // Define a query template.
 module.exports = q;                         // Exports it.
-module.parent || console.log(               // Allow cli usage.
+module.parent || console.log(               // Allow CLI usage.
     q.sql('cli', process.argv.slice(2))     // Allow shell arguments
 );
 ```
@@ -251,11 +388,11 @@ const args = myQuery.args({            // Get properly sorted and filtered
   * From command line:
 
 ```sh
-# Get parametyzed sql to provide to some database cli:
+# Get parametyzed sql to provide to some database CLI:
 $ node myQuery.sql.js arg1 arg2 "argument 3"
 # Do the same specifically for oracle engine:
 $ SQLTT_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
-# You also can directly pipe to that cli:
+# You also can directly pipe to that CLI:
 $ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ```
 
@@ -470,7 +607,7 @@ module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 >
 **NOTE:** It does not matter if nested templates are already instantiated (like
 [first example](#simple-template-file)) or not like ([second
-one](#simpler-template-example-with-no-boilerplate)).  
+one](#simpler-template-example-with-no-boilerplate)).
 >
 
 
@@ -483,7 +620,7 @@ Currently supported engines are:
   * *postgresqlcli:* For PostgreSQL CLI output.
   * *oracle:* For Oracle Database.
 
-...and oracle still lacks cli implementation (so fails back to default one).
+...and oracle still lacks CLI implementation (so fails back to default one).
 
 ### Adding more Database Engines
 
@@ -519,7 +656,7 @@ will avoid its interpolation as argument.
 const sqltt = require("sqltt");
 const q = new sqltt({
     hooks: {
-        // Prettier formatting on cli output:
+        // Prettier formatting on CLI output:
         json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
         // Fix lack of implicit casting in Oracle:
         fromTimestamp: (arg, eng) => eng.match(/^oracle/) && "TO_DATE("+arg+", 'yyyy/mm/dd')",
