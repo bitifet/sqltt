@@ -6,7 +6,7 @@ const argParser = (v)=>v===undefined?null:v;
 const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
-const re_cli = /(?:^|_)cli$/;
+const re_cli = /(?:^|_)((?:no)?cli)$/;
 
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -16,25 +16,31 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
     function resolveEngine(me, engName0 = "") {//{{{
 
-        const isCli = !! (engName0 || "").match(re_cli);
+        let isCli = false;
 
         const [
             tplDefault,
-            envDefault,
             engName,
+            envDefault,
         ] = [
             me.getSource().default_engine,
-            process.env[ENGINE_ENV_VAR],
             engName0,
-        ].map(
-            s=>(s||"").replace(re_cli, "") // Leave flavour only
-        );
-
+            process.env[ENGINE_ENV_VAR],
+        ]
+            .map(function update_isCli(str) {
+                const m = (str || "").match(re_cli);
+                if (m) isCli = m[1] == "cli";
+                return str; // Pass through
+            })
+            .map(function pickFlavour(str) {
+                return (str||"").replace(re_cli, "")
+            })
+        ;
 
         const flavour = engName || envDefault || tplDefault || "default";
-        let name = engName0 == "cli"
+        let name = isCli
             ? flavour+"_cli"
-            : flavour
+            : flavour.replace(re_cli, "")
         ;
 
         if (isCli && ! engines[name]) {

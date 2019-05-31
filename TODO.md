@@ -4,9 +4,6 @@ TO-DO list & notes
 TO-DO
 -----
 
-  * Implement a '_nocli' suffix (and simply 'nocli') to allow non cli-flavoured
-    rendering from CLI for inspection purposes.
-
   * Provide an option to decide, in cli output, wether non specified arguments
     will default to empty strings or its *set* commands not rendered at all (in
     order to respect previously setted values).
