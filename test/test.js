@@ -9,6 +9,8 @@ const sqltt = require('../');
 //     - By template default.
 //     - By explicit specification (.sql(eng) / .args(eng))
 //     - By absolute default ("default")
+//
+//   * Test *_nocli and nocli.
 
 // Helpers
 // =======

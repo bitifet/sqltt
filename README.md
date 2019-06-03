@@ -21,6 +21,18 @@ Index
                 * [Executing queries](#executing-queries)
                 * [Selecting Engine Flavour](#selecting-engine-flavour)
     * [Template Format](#template-format)
+        * [SQL Callback](#sql-callback)
+    * [API Reference](#api-reference)
+        * [Template API](#template-api)
+            * [sql(engFlavour)](#sqlengflavour)
+            * [args(argData)](#argsargdata)
+            * [concat(str)](#concatstr)
+            * [split(engFlavour)](#splitengflavour)
+        * [Tag API](#tag-api)
+            * [arg(argName)](#argargname)
+            * [literal(str)](#literalstr)
+            * [include(src [, bindings])](#includesrc-bindings)
+        * [keys(), values() and entries()](#keys-values-and-entries)
 * [OUTDATED:](#outdated)
         * [Single-query template files:](#single-query-template-files)
         * [Mulitple-query template files:](#mulitple-query-template-files)
@@ -170,8 +182,8 @@ sqltt.publish(module, tpl);
 ```javascript
 const sqltt = require("sqltt");
 const tpl = {
-    aQuery: new sqltt( /* ... */),
-    anotherQuery: new sqltt( /* ... */),
+    aQuery: new sqltt( /* Template source... */),
+    anotherQuery: new sqltt( /* Template source... */),
     /* ... */
 };
 sqltt.publish(module, tpl);
@@ -200,7 +212,7 @@ multiple-template files too as we will see below.
 
 This allows us to use our constructed sqltt instances:
 
-1. As a library from NodeJS application.
+1. As a module from NodeJS application.
 2. As a command line tool to get *whatever_our_database_cli suitable* rendered
    SQL.
 
@@ -270,7 +282,7 @@ user@host:~/examples$ node users.sql.js
 Available queries: list, getProfile, insert, update
 ```
 
-...then we just need to pick from the desired query to render:
+...then we just need to pick for the desired query to render:
 
 ```sh
 user@host:~/examples$ node users.sql.js list
@@ -338,6 +350,99 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
 
 Template Format
 ---------------
+
+SQLTT templates consist in a JSON object with one or more of the following keys:
+
+  * **sql:** *(Mandatory)* a SQL string or a [SQL Callback](#sql-callback).
+    Using  a simple string provides a leaner way to define SQL string. But no
+    interpolated arguments are possible in this case.
+
+  * **args:** *(Optional)* An array of strings declaring argument names and the
+    order in which they must be numbered. If ommitted or incomplete, the rest
+    of arguments will be appended in appearing order.
+
+  * **altsql:** *(Optional)* One of the main goals of **SQLTT** is not having
+    to mantain multiple versions of the same query for different databases. But
+    when there is no other option, *altsql* let us to provide alternatives for
+    specific database engines. Ex.: `` altsql: { oracle: /* Oracle-specific sql
+    string or cbk */} ``.
+
+  * **default_engine:** *(Optional)* Change the default rendering engine for
+    that template. That is: the engine that will be used to render SQL when it
+    is not explicitly specified in ``.sql()`` method call.
+
+
+### SQL Callback
+
+
+
+
+
+
+
+
+API Reference
+-------------
+
+*SQLTT* involves two API interfaces:
+
+  * [Template API](#template-api): That is the methods we have available from
+    any *SQLTT* instantiated template.
+
+  * [Tag API](#tag-api): Consisting on various methods attached to the tag
+    function our template will receive during its compilation.
+
+
+### Template API
+
+After instantiating our template as SQLTT (`const myQuery = new
+sqltt(_my_template_)`), we are allowed to use below methods:
+
+#### sql(engFlavour)
+
+
+
+
+**Arguments:**
+
+  * *engName:* (Optional)
+
+
+#### args(argData)
+
+
+**Arguments:**
+
+  * *argData:* Can be a simple array
+
+
+#### concat(str)
+
+
+#### split(engFlavour)
+
+
+
+
+Another *sqltt* instance's method is `.split(<engineType>)`.
+
+This method picks the SQL for the specified engine (or default one if not
+specified or there isn't *altsql* specification for it) and splits it by all
+contained semicolons (`;`).
+
+It retruns an array of new *sqltt* instances for those subqueries.
+
+
+### Tag API
+
+
+#### arg(argName)
+
+#### literal(str)
+
+#### include(src [, bindings])
+
+### keys(), values() and entries()
 
 
 
