@@ -8,6 +8,9 @@ TO-DO
     will default to empty strings or its *set* commands not rendered at all (in
     order to respect previously setted values).
 
+  * ...Consider an option for nulls too:
+    - Ex.: `\set foo null; ... where foo = coalesce( :foo , 'default')`
+
   * DOCUMENTATE `$.keys(obj)`, `$.values(obj)` and `$.entries(obj)` to retrieve
     comma separated lists of, respectively, *obj* keys (as literals), *obj*
     values (mapped through `$.arg()`) and pairs of the former joined by '='.

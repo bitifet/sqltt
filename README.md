@@ -69,36 +69,34 @@ possible features I have been adding over time.
 Features
 --------
 
-  * Very simple and readable templates. Multiple formats:
-    - Arguments in given order: ``{args: ["baz"], sql: $=>$`select foo from bar where baz = ${"baz"}`}``.
-    - Arguments in appearence order: ``$=>$`select foo from bar where baz = ${"baz"}` ``.
-    - Simple string: ``"select foo from bar"`` (no argumments in this case)
-    - Readable strings as argument placeholders instead of ``$1``, ``$2``, etc...
+  * DRY: 
+    - Write single SQL template.
+    - Render it for [for your application](#from-application) properly
+      formatted for one or more database engines. Ex.:
+      - PostgreSQL: ``myTpl.sql('postgresql') // select [...] where baz = $1``
+      - Oracle: ``myTpl.sql('oracle')'        // select [...] where baz = :1``
+      - ...
+    - Generate [database-specific CLI versions](#executing-queries) too.
+      - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
+      - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQLTT_ENGINE env var defined``
+    - ...all without changing anything.
 
-  * Write SQL [for your application](#from-application) and test them [from
-    CLI](#executing-queries) without changing anything.
+  * Very simple, readable and non-intrusive [template
+    format](#template-format).
 
-  * Easy arguments hanling:
-    - Order can be explicitly (and even partially) specified in the ``args``
-      template property.
-    - Non specified arguments are automatically fulfilled in query appearing
+  * Easy placeholders hanling:
+    - Readable strings as argument placeholders instead of ``$1``, ``$2``,
+      etc... (postgresql) or ``:1``, ``:2``, etc... (oracle), for example.
+    - Numeration can be (even partially) explicitly specified by enumerating
+      them in the ``args`` template property or infered by its apparition order
+      Non specified arguments are automatically fulfilled in query appearing
       order.
 
   * Arguments generator helper:
-    - Returns an array in the proper order.
-    - Unused arguments are ignored and not needed properties are silently
-      ignored.
+    - Provide a key: value object and get properly sorted arguments array.
+    - With keys silently ignored.
+    - And missing keys defaulting to *null*
     - Ex.: ``myTpl.args({foo: "fooVal", bar: "barVal"})``.
-
-  * Multiple database engine support (``const myTpl = new sqltt(...)``):
-    - PostgreSQL: ``myTpl.sql('postgresql') // select [...] where baz = $1``
-    - Oracle: ``myTpl.sql('oracle')'        // select [...] where baz = :1``
-    - Default: ``myTpl.sql()                // select [...] where baz = $1``
-    - Others may be easily added.
-
-  * Database CLI syntax support:
-    - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
-    - Auto: ``myTpl.sql('cli') // Default unless SQLTT_ENGINE env var defined``
 
   * Publishing helper: ``sqltt.publish(module, myTpl);``
     - Assigns ``myTpl`` to ``module.exports`` (so exports it).
@@ -111,8 +109,7 @@ Features
       - Ex.: ``node myTplLib.sql.js listQuery``
       - If no argument provided in this case, a list of available keys will be
         shown instead.
-    - Additional arguments are wrapped in a *set* commands in order to populate
-      arguments.
+    - Arguments are wrapped in a *set* commands.
       - Ex.: ``node myTpl.sql parameter1 parameter2 "third parameter"``
       - Ex.: ``node myTplLib.sql listBySection sectionId``
 
@@ -347,9 +344,9 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
       myTpl.sql.js ...```).
 
 
-
 Template Format
 ---------------
+
 
 SQLTT templates consist in a JSON object with one or more of the following keys:
 
@@ -372,11 +369,47 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
     is not explicitly specified in ``.sql()`` method call.
 
 
+
+**Examples:**
+
+  * Arguments in given order: ``{args: ["baz"], sql: $=>$`select foo from bar where baz = ${"baz"}`} ``.
+  * Arguments in appearence order: ``$=>$`select foo from bar where baz = ${"baz"}` ``.
+  * Simple string: ``"select foo from bar"`` (no argumments in this case)
+
+
 ### SQL Callback
 
+The *SQL Callback* receives single parameter (named `$`, even we can name it
+whatever we like).
 
+This parameter is expected to receive a *tag function* and the whole callback
+is expected to return an [ES6+ Tagged Template
+Literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
+generating an SQL statement.
 
+**Example:**
 
+```javascript
+$=>$`
+    select foo
+    from bar
+    where baz = ${"value"}
+```
+
+**NOTES:**
+
+  * *Arrow function* syntax is used too in order to minimize verbosity.
+
+  * In ``${"value"}``, the ``$`` sign is part of *ES6+ Tagged Templates*
+    interpolation syntax (``${...}``). Not the tag function.
+    - That is: ``X=>X`select ... = ${"value"}`` could had been used instead.
+
+  * The ``$`` argument, despite being the *tag function*, it has also various
+    methods (which we call the [Tag API](#tag-api)) providing several extra
+    functionalities.
+
+  * In fact, ``${"value"}`` is just a shorthand for ``${$.arg("value")}`` (or
+    ``${X.arg("value")}`` if ``X`` is used instead of ``$``).
 
 
 
