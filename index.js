@@ -7,6 +7,7 @@ const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
 const re_cli = /(?:^|_)((?:no)?cli)$/;
+const re_rowtrim = /^(?:\s*\n)*|(?:\n\s*)*$/g;
 
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -149,7 +150,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, eng)), cliArgs);
         me.sqlCache[eng.name] = outSql;
-        return outSql;
+        return outSql.replace(re_rowtrim, "");
     };//}}}
     sqltt.prototype.args = function args(data = {}) {//{{{
         const me = this;
