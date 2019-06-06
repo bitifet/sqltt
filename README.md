@@ -1,15 +1,64 @@
 SQLTT - SQL Tagged Templates
 ============================
 
-> SQL Tagged Templates Engine
+> *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
+> Javascript Projects taking advantadge of the [ES6+ Tagged
+> Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
+> feature.
+>
+> Original idea comes from [this StackOverflow
+> answer](https://stackoverflow.com/a/41136912/4243912) which I have been using
+> and progressively evolving until it had become too big to agglutinate all
+> possible features I have been adding over time.
 
-Index
------
+
+Example
+-------
+
+```javascript
+const sqltt = require("../"); // sqltt
+const commonFields = ['sectionId', 'title', 'body'];
+
+const q = {};
+
+q.list = new sqltt(`
+    select id, sectionName, title
+    from articles
+    join sections using(sectionId)
+`);
+
+q.listBySection = new sqltt($=>$`
+    ${q.list}                         ${$.REM("Same as ${$.include(q.list)}")}
+    where sectionId = ${"sectionId"}  ${$.REM("Same as ${$.arg('sectionId')}")}
+`);
+
+q.show = new sqltt($=>$`
+    select id, sectionName, title, body
+    from articles
+    join sections using(sectionId)
+    where id = ${"id"}
+`);
+
+q.insert = new sqltt($=>$`
+    insert into articles (${$.keys(commonFields)})
+    values (${$.values(commonFields)})
+`);
+
+q.update = new sqltt($=>$`
+    update articles set ${$.entries(commonFields)}
+    where id = ${"id"}
+`);
+
+sqltt.publish(module, q); // Export and make available from CLI
+```
+
+
+Table of Contents
+-----------------
 
 <!-- vim-markdown-toc GitLab -->
 
 * [UPDATED:](#updated)
-    * [Abstract](#abstract)
     * [Features](#features)
     * [Setup and Usage](#setup-and-usage)
         * [Package setup](#package-setup)
@@ -52,19 +101,6 @@ UPDATED:
 
 (Future 1.0.0 version)
 
-Abstract
---------
-
-*SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
-Javascript Projects taking advantadge of the [ES6+ Tagged
-Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
-feature.
-
-Original idea comes from [this StackOverflow
-answer](https://stackoverflow.com/a/41136912/4243912) which I have been using
-and progressively evolving until it had become too big to agglutinate all
-possible features I have been adding over time.
-
 
 Features
 --------
@@ -93,9 +129,8 @@ Features
       order.
 
   * Arguments generator helper:
-    - Provide a key: value object and get properly sorted arguments array.
-    - With keys silently ignored.
-    - And missing keys defaulting to *null*
+    - Generates properly sorted arguments array from a *{key: value,...}* object.
+    - Missing keys defaults to *null* and unused ones are silently ignored.
     - Ex.: ``myTpl.args({foo: "fooVal", bar: "barVal"})``.
 
   * Publishing helper: ``sqltt.publish(module, myTpl);``
