@@ -16,7 +16,7 @@ Example
 -------
 
 ```javascript
-const sqltt = require("../"); // sqltt
+const sqltt = require("sqltt");
 const commonFields = ['sectionId', 'title', 'body'];
 
 const q = {};
