@@ -14,86 +14,172 @@ SQLTT - SQL Tagged Templates
 
 Example
 -------
+<!-- {{{ -->
+
+**$ cat personnel.sql.js**
 
 ```javascript
 const sqltt = require("sqltt");
-const commonFields = ['sectionId', 'title', 'body'];
+const commonFields = ['dptId', 'title', 'body'];
+
+"dptId", "name", "sex", "birth"
 
 const q = {};
 
 q.list = new sqltt(`
-    select id, sectionName, title
-    from articles
-    join sections using(sectionId)
+    select id, dptName, name
+    from personnel
+    join depts using(dptId)
 `);
 
-q.listBySection = new sqltt($=>$`
-    ${q.list}                         ${$.REM("Same as ${$.include(q.list)}")}
-    where sectionId = ${"sectionId"}  ${$.REM("Same as ${$.arg('sectionId')}")}
+q.listByDept = new sqltt($=>$`
+    ${q.list}                 ${$.REM("Same as ${$.include(q.list)}")}
+    where dptId = ${"dptId"}  ${$.REM("Same as ${$.arg('dptId')}")}
 `);
 
 q.show = new sqltt($=>$`
-    select id, sectionName, title, body
-    from articles
-    join sections using(sectionId)
+    select id, dptName, name, birth, ctime
+    from personnel
+    join depts using(dptId)
     where id = ${"id"}
 `);
 
 q.insert = new sqltt($=>$`
-    insert into articles (${$.keys(commonFields)})
+    insert into personnel (${$.keys(commonFields)})
     values (${$.values(commonFields)})
 `);
 
 q.update = new sqltt($=>$`
-    update articles set ${$.entries(commonFields)}
+    update personnel set ${$.entries(commonFields)}
     where id = ${"id"}
 `);
 
 sqltt.publish(module, q); // Export and make available from CLI
 ```
+<!-- }}} -->
+
+
+**$ node personnel.sql.js**
+
+```sh
+Available queries: list, listByDept, show, insert, update
+```
+
+**$ node personnel.sql.js list**
+
+```sh
+    select id, dptId, dptName, name, sex
+    from personnel
+    join depts using(dptId)
+```
+
+
+**$ node personnel.sql.js list | psql tiaDB**
+
+```sh
+ id |   dptid    |    dptname     |   name    | sex
+----+------------+----------------+-----------+-----
+  1 | management | Management     | Super     | m
+  3 | oper       | Operations     | Filemon   | m
+  2 | oper       | Operations     | Mortadelo | m
+  4 | adm        | Administration | Ofelia    | f
+  5 | i+d        | I+D            | Bacterio  | m
+(5 rows)
+```
+
+
+**$ node personnel.sql.js listByDept oper**
+
+```sh
+\set dptId '''oper'''
+        select id, dptId, dptName, name, sex
+    from personnel
+    join depts using(dptId)
+    where dptId = :dptId
+```
+
+
+**$ node personnel.sql.js listByDept oper | psql tiaDB**
+
+```sh
+ id | dptid |  dptname   |   name    | sex
+----+-------+------------+-----------+-----
+  2 | oper  | Operations | Mortadelo | m
+  3 | oper  | Operations | Filemon   | m
+(2 rows)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 Table of Contents
 -----------------
 
+<!-- {{{ -->
+
 <!-- vim-markdown-toc GitLab -->
 
 * [UPDATED:](#updated)
-    * [Features](#features)
-    * [Setup and Usage](#setup-and-usage)
-        * [Package setup](#package-setup)
-        * [Writing templates](#writing-templates)
-        * [Usage](#usage)
-            * [From application](#from-application)
-            * [From CLI](#from-cli)
-                * [Providing arguments](#providing-arguments)
-                * [Executing queries](#executing-queries)
-                * [Selecting Engine Flavour](#selecting-engine-flavour)
-    * [Template Format](#template-format)
-        * [SQL Callback](#sql-callback)
-    * [API Reference](#api-reference)
-        * [Template API](#template-api)
-            * [sql(engFlavour)](#sqlengflavour)
-            * [args(argData)](#argsargdata)
-            * [concat(str)](#concatstr)
-            * [split(engFlavour)](#splitengflavour)
-        * [Tag API](#tag-api)
-            * [arg(argName)](#argargname)
-            * [literal(str)](#literalstr)
-            * [include(src [, bindings])](#includesrc-bindings)
-        * [keys(), values() and entries()](#keys-values-and-entries)
+	* [FEATURES](#features)
+	* [SETUP AND USAGE](#setup-and-usage)
+		* [Package setup](#package-setup)
+		* [Writing templates](#writing-templates)
+		* [Usage](#usage)
+			* [From application](#from-application)
+			* [From CLI](#from-cli)
+				* [Providing arguments](#providing-arguments)
+				* [Executing queries](#executing-queries)
+				* [Selecting Engine Flavour](#selecting-engine-flavour)
+	* [TEMPLATE FORMAT](#template-format)
+		* [SQL Callback](#sql-callback)
+	* [API REFERENCE](#api-reference)
+		* [Template API](#template-api)
+			* [sql(engFlavour)](#sqlengflavour)
+			* [args(argData)](#argsargdata)
+			* [concat(str)](#concatstr)
+			* [split(engFlavour)](#splitengflavour)
+		* [Tag API](#tag-api)
+			* [arg(argName)](#argargname)
+			* [literal(str)](#literalstr)
+			* [include(src [, bindings])](#includesrc-bindings)
+		* [keys(), values() and entries()](#keys-values-and-entries)
 * [OUTDATED:](#outdated)
-        * [Single-query template files:](#single-query-template-files)
-        * [Mulitple-query template files:](#mulitple-query-template-files)
-            * [*template* parts:](#template-parts)
-            * [Valid *options*:](#valid-options)
-    * [Usage Examples](#usage-examples)
-        * [From NodeJS application:](#from-nodejs-application)
-        * [From console](#from-console)
-    * [TODO](#todo)
-    * [Contributing](#contributing)
+	* [Single-query template files:](#single-query-template-files)
+	* [Mulitple-query template files:](#mulitple-query-template-files)
+		* [*template* parts:](#template-parts)
+		* [Valid *options*:](#valid-options)
+	* [Usage Examples](#usage-examples)
+		* [From NodeJS application:](#from-nodejs-application)
+		* [From console](#from-console)
+	* [TODO](#todo)
+	* [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
+
+<!-- }}} -->
 
 
 UPDATED:
@@ -102,9 +188,9 @@ UPDATED:
 (Future 1.0.0 version)
 
 
-Features
+FEATURES
 --------
-
+<!-- {{{ -->
   * DRY: 
     - Write single SQL template.
     - Render it for [for your application](#from-application) properly
@@ -181,9 +267,9 @@ Features
     - By using .sql extension instead of .js (despite the little js overhead).
     - By ``-- @@/sql@@``and ``-- @@/sql@@`` comments [in
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
+<!-- }}} -->
 
-
-Setup and Usage
+SETUP AND USAGE
 ---------------
 
 ### Package setup
@@ -193,11 +279,12 @@ project directory.
 
 
 ### Writing templates
-
+<!-- {{{ -->
 Every template file may contain single or multiple *SQLTT* templates and may
 export them either in its source form as already constructed *SQLTT* instances.
 
 But preferred way is as follows:
+
 
 **For single template:**
 
@@ -223,10 +310,10 @@ sqltt.publish(module, tpl);
 
 See [Template Format](#template-format) below to learn about the syntax of
 template sources.
-
+<!-- }}} -->
 
 ### Usage
-
+<!-- {{{ -->
 The final ``sqltt.publish(module, tpl)`` statement in previous examples
 replaces classic ``module.exports = tpl`` and is almost equivalent to:
 
@@ -237,20 +324,18 @@ module.parent || console.log(              // Allow CLI usage.
 );
 ```
 
->
-In fact it is slightly more complicated in order to properly hanle
-multiple-template files too as we will see below.
->
+> 👉 In fact it's slightly more complicated in order to properly handle
+> multiple-template files too as we will see below.
 
 This allows us to use our constructed sqltt instances:
 
-1. As a module from NodeJS application.
-2. As a command line tool to get *whatever_our_database_cli suitable* rendered
-   SQL.
-
+1. [From application](#from-application): As a module from NodeJS application.
+2. [From CLI](#from-cli): As a command line tool to get
+   *whatever_our_database_cli suitable* rendered SQL.
+<!-- }}} -->
 
 #### From application
-
+<!-- {{{ -->
 **Single Template Example:**
 
 ```javascript
@@ -292,10 +377,10 @@ const userProfile_args = myQueries.userProfile.args({
 // myDb.query(userProfile_sql, userProfile_args);
 
 ```
-
+<!-- }}} -->
 
 #### From CLI
-
+<!-- {{{ -->
 From command line we just need to execute our template through *node*:
 
 ```sh
@@ -322,10 +407,10 @@ user@host:~/examples$ node users.sql.js list
 select * from users;
 
 ```
-
+<!-- }}} -->
 
 ##### Providing arguments
-
+<!-- {{{ -->
 If our query requires arguments, we can feed it simply adding them to the
 command line:
 
@@ -346,25 +431,25 @@ user@host:~/examples$ node users.sql.js getProfile 23
 >
 > For this reason all arguments are quoted unconditionally given that most
 > database engines will automatically cast them as numbers when needed.
-
+<!-- }}} -->
 
 ##### Executing queries
-
+<!-- {{{ -->
 ```sh
 user@host:~/examples$ node users.sql.js list | psql tiaDB
 
- id |   name    | sex | dpt  |   birth    |           ctime
-----+-----------+-----+------+------------+----------------------------
-  1 | Mortadelo | m   | oper | 1969-03-10 | 2019-05-31 10:58:09.346467
-  2 | Filemon   | m   | oper | 1965-08-15 | 2019-05-31 10:58:46.291629
-  3 | Ofelia    | f   | adm  | 1972-08-29 | 2019-05-31 11:05:16.594719
-  4 | Bacterio  | m   | it   | 1965-08-15 | 2019-05-31 11:05:35.807663
+ id |   name    | sex | dptName        |   birth    |           ctime
+----+-----------+-----+----------------+------------+----------------------------
+  1 | Mortadelo | m   | Operations     | 1969-03-10 | 2019-05-31 10:58:09.346467
+  2 | Filemon   | m   | Operations     | 1965-08-15 | 2019-05-31 10:58:46.291629
+  3 | Ofelia    | f   | Administration | 1972-08-29 | 2019-05-31 11:05:16.594719
+  4 | Bacterio  | m   | I+D            | 1965-08-15 | 2019-05-31 11:05:35.807663
 (...)
 ```
-
+<!-- }}} -->
 
 ##### Selecting Engine Flavour
-
+<!-- {{{ -->
 To render SQL from CLI, *default_cli* engine is selected by default except if
 ``default_engine`` property is defined in template source. For example, for
 ``temlate_engine: "postgresql"``, *postgresqsl_cli* will be picked for instead.
@@ -376,13 +461,13 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
   a) Exporting it (Ex.: ``export SQLTT_ENGINE=postgresql``).
 
   b) Setting just for single execution (Ex.: ``SQLTT_ENGINE=oracle node
-      myTpl.sql.js ...```).
+      myTpl.sql.js ...``).
+<!-- }}} -->
 
-
-Template Format
+TEMPLATE FORMAT
 ---------------
 
-
+<!-- {{{ -->
 SQLTT templates consist in a JSON object with one or more of the following keys:
 
   * **sql:** *(Mandatory)* a SQL string or a [SQL Callback](#sql-callback).
@@ -410,10 +495,10 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
   * Arguments in given order: ``{args: ["baz"], sql: $=>$`select foo from bar where baz = ${"baz"}`} ``.
   * Arguments in appearence order: ``$=>$`select foo from bar where baz = ${"baz"}` ``.
   * Simple string: ``"select foo from bar"`` (no argumments in this case)
-
+<!-- }}} -->
 
 ### SQL Callback
-
+<!-- {{{ -->
 The *SQL Callback* receives single parameter (named `$`, even we can name it
 whatever we like).
 
@@ -445,13 +530,13 @@ $=>$`
 
   * In fact, ``${"value"}`` is just a shorthand for ``${$.arg("value")}`` (or
     ``${X.arg("value")}`` if ``X`` is used instead of ``$``).
+<!-- }}} -->
 
 
 
-
-API Reference
+API REFERENCE
 -------------
-
+<!-- {{{ -->
 *SQLTT* involves two API interfaces:
 
   * [Template API](#template-api): That is the methods we have available from
@@ -459,7 +544,7 @@ API Reference
 
   * [Tag API](#tag-api): Consisting on various methods attached to the tag
     function our template will receive during its compilation.
-
+<!-- }}} -->
 
 ### Template API
 
@@ -521,7 +606,8 @@ OUTDATED:
 (from version 0.3.1 and earlier)
 
 
-### Single-query template files:
+Single-query template files:
+----------------------------
 
 *sqltt* is intended to be required from SQL template files. (See [Template
 Examples](#template-examples) below). 
@@ -569,7 +655,8 @@ $ SQLTT_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
 $ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ```
 
-### Mulitple-query template files:
+Mulitple-query template files:
+------------------------------
 
 For small queries, sometimes it turns out being more practical gathering them
 together into single file exported as *key*->*value* object.
@@ -615,7 +702,7 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
 ```
 
 
-#### *template* parts:
+### *template* parts:
 
   * ``sql``: **(Mandatory)** Actual SQL template of the following form (See
     [examples](#template-examples) below):
@@ -630,7 +717,7 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
     query being included beside others through ``$.include([subq1, ...])``.
 
 
-#### Valid *options*:
+### Valid *options*:
 
   * **check_arguments** (default: *true*): Allows to avoid template's *args*
     validation checks (they will be auto-corrected instead of throwing an
