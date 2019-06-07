@@ -67,7 +67,7 @@ Available queries: list, listByDept, show, insert, update
 
 **$ node personnel.sql.js list**
 
-```sh
+```sql
     select id, dptId, dptName, name, sex
     from personnel
     join depts using(dptId)
@@ -90,7 +90,7 @@ Available queries: list, listByDept, show, insert, update
 
 **$ node personnel.sql.js listByDept oper**
 
-```sh
+```sql
 \set dptId '''oper'''
         select id, dptId, dptName, name, sex
     from personnel
@@ -108,30 +108,6 @@ Available queries: list, listByDept, show, insert, update
   3 | oper  | Operations | Filemon   | m
 (2 rows)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
