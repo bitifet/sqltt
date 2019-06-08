@@ -1,28 +1,62 @@
 SQLTT - SQL Tagged Templates
 ============================
 
-> *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
-> Javascript Projects taking advantadge of the [ES6+ Tagged
-> Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
-> feature.
->
+*SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
+Javascript Projects taking advantadge of the [ES6+ Tagged
+Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
+feature.
+
 > Original idea comes from [this StackOverflow
 > answer](https://stackoverflow.com/a/41136912/4243912) which I have been using
 > and progressively evolving until it had become too big to agglutinate all
 > possible features I have been adding over time.
 
+SQL is a powerful language, but most databases come with their own variations
+and nuances.
 
-Example
--------
+Even for the same database engine, the syntax used in application libraries and
+[CLI](https://en.wikipedia.org/wiki/Command-line_interface#Other_command-line_interfaces)
+interpreters usually differs. At least for parametyzed queries.
+
+This often forces developers to modify their queries back and forth to test
+them in database CLI or, even worst, when they need to support different
+database engines. In which case they are most times forced to mantain
+completely different versions of the same query for each supported database.
+
+ORM solutions solve that problem at the cost of generating suboptimal queries
+and disallowing most powerful SQL and/or database-specific features.
+
+SQLTT allow us to maintain single version of each query while preserving the
+whole power of actual SQL also providing many advanced features such as reusing
+snipppets or whole queries and much more [much more](#features) fully embracing
+the [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
+
+
+Examples
+--------
+
+Following are a few examples to better understand what *SQLTT* does and how
+powerful it is just in a glance.
+
+> For more detailed documentation go directly to the [Table of
+> Contents](table-of-contents) below.
+
+
+### Template example
+
 <!-- {{{ -->
 
-**$ cat personnel.sql.js**
+The following example shows how a *SQLTT* template looks like and how we can
+use that template to generate actual SQL suitable for multiple database engines
+or even directly execute it through a *CLI* interpreter.
+
+
+**$ ``cat personnel.sql.js``**
 
 ```javascript
 const sqltt = require("sqltt");
-const commonFields = ['dptId', 'title', 'body'];
+const commonFields = ["dptId", "name", "sex", "birth"];
 
-"dptId", "name", "sex", "birth"
 
 const q = {};
 
@@ -56,16 +90,29 @@ q.update = new sqltt($=>$`
 
 sqltt.publish(module, q); // Export and make available from CLI
 ```
+
 <!-- }}} -->
 
+### Executing from cli
 
-**$ node personnel.sql.js**
+<!-- {{{ -->
+
+This template example provide multiple queries in single file so, when invoked
+from command line without arguments, it will ask us for a query selection: 
+
+**$ ``node personnel.sql.js``**
 
 ```sh
 Available queries: list, listByDept, show, insert, update
 ```
 
-**$ node personnel.sql.js list**
+> **NOTE:** If single SQLTT template where exported in that file, we would had
+> obtained its SQL instead just as we are going to get right now by specifying
+> it.
+
+Now we can obtain desired query just specifying it as a parameter:
+
+**$ ``node personnel.sql.js list``**
 
 ```sql
     select id, dptId, dptName, name, sex
@@ -74,7 +121,9 @@ Available queries: list, listByDept, show, insert, update
 ```
 
 
-**$ node personnel.sql.js list | psql tiaDB**
+...and, of course, we can pipe it to our preferred database engine too:
+
+**$ ``node personnel.sql.js list | psql tiaDB``**
 
 ```sh
  id |   dptid    |    dptname     |   name    | sex
@@ -87,8 +136,10 @@ Available queries: list, listByDept, show, insert, update
 (5 rows)
 ```
 
+Other queries may require arguments, so we just provide them as additional
+command line arguments:
 
-**$ node personnel.sql.js listByDept oper**
+**$ ``node personnel.sql.js listByDept oper``**
 
 ```sql
 \set dptId '''oper'''
@@ -98,8 +149,9 @@ Available queries: list, listByDept, show, insert, update
     where dptId = :dptId
 ```
 
+...and, again, we can execute obtained sql too:
 
-**$ node personnel.sql.js listByDept oper | psql tiaDB**
+**$ ``node personnel.sql.js listByDept oper | psql tiaDB``**
 
 ```sh
  id | dptid |  dptname   |   name    | sex
@@ -109,6 +161,61 @@ Available queries: list, listByDept, show, insert, update
 (2 rows)
 ```
 
+<!-- }}} -->
+
+
+### Using from NodeJS application:
+
+<!-- {{{ -->
+```javascript
+const personnelSQL = require('path/to/personnel.sql.js');
+const db = require('ppooled-pg')(connection_data); // Or your preferred library.
+const inputData = {
+    arg1: "value1",
+    arg2: "value2",
+    /* ... */
+}
+
+// List all personnel
+db.queryRows(
+    personnelSQL.list.sql("postgresql")
+    , []
+).then(rows=>console.log(rows);
+
+// List given dept personnel
+const dptId = 'adm';
+db.queryRows(
+    personnelSQL.listByDept.sql("postgresql")
+    , [dptId]
+).then(rows=>console.log(rows);
+
+// Insert new item
+const newPerson = {
+    name: "Chorizez",
+    dptId: "robbers",
+    sex: "m",
+    // birth: "", // Unknown data will default to null
+    connection: { // Unused data will be ignored
+        ip: "10.0.1.25",
+        port: 80,
+        trusted: false,
+    }
+};
+db.queryRows(
+    personnelSQL.insert.sql("postgresql")
+    , personnelSQL.args(newPerson)
+).then(rows=>console.log(rows);
+```
+
+> **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
+> Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
+> so we could simply have wrote:
+> ```sql
+> db.queryRows(myQuery, inputData);
+> ```
+
+
+<!-- }}} -->
 
 
 Table of Contents
@@ -119,39 +226,39 @@ Table of Contents
 <!-- vim-markdown-toc GitLab -->
 
 * [UPDATED:](#updated)
-	* [FEATURES](#features)
-	* [SETUP AND USAGE](#setup-and-usage)
-		* [Package setup](#package-setup)
-		* [Writing templates](#writing-templates)
-		* [Usage](#usage)
-			* [From application](#from-application)
-			* [From CLI](#from-cli)
-				* [Providing arguments](#providing-arguments)
-				* [Executing queries](#executing-queries)
-				* [Selecting Engine Flavour](#selecting-engine-flavour)
-	* [TEMPLATE FORMAT](#template-format)
-		* [SQL Callback](#sql-callback)
-	* [API REFERENCE](#api-reference)
-		* [Template API](#template-api)
-			* [sql(engFlavour)](#sqlengflavour)
-			* [args(argData)](#argsargdata)
-			* [concat(str)](#concatstr)
-			* [split(engFlavour)](#splitengflavour)
-		* [Tag API](#tag-api)
-			* [arg(argName)](#argargname)
-			* [literal(str)](#literalstr)
-			* [include(src [, bindings])](#includesrc-bindings)
-		* [keys(), values() and entries()](#keys-values-and-entries)
+    * [FEATURES](#features)
+    * [SETUP AND USAGE](#setup-and-usage)
+        * [Package setup](#package-setup)
+        * [Writing templates](#writing-templates)
+        * [Usage](#usage)
+            * [From application](#from-application)
+            * [From CLI](#from-cli)
+                * [Providing arguments](#providing-arguments)
+                * [Executing queries](#executing-queries)
+                * [Selecting Engine Flavour](#selecting-engine-flavour)
+    * [TEMPLATE FORMAT](#template-format)
+        * [SQL Callback](#sql-callback)
+    * [API REFERENCE](#api-reference)
+        * [Template API](#template-api)
+            * [sql(engFlavour)](#sqlengflavour)
+            * [args(argData)](#argsargdata)
+            * [concat(str)](#concatstr)
+            * [split(engFlavour)](#splitengflavour)
+        * [Tag API](#tag-api)
+            * [arg(argName)](#argargname)
+            * [literal(str)](#literalstr)
+            * [include(src [, bindings])](#includesrc-bindings)
+        * [keys(), values() and entries()](#keys-values-and-entries)
 * [OUTDATED:](#outdated)
-	* [Single-query template files:](#single-query-template-files)
-	* [Mulitple-query template files:](#mulitple-query-template-files)
-		* [*template* parts:](#template-parts)
-		* [Valid *options*:](#valid-options)
-	* [Usage Examples](#usage-examples)
-		* [From NodeJS application:](#from-nodejs-application)
-		* [From console](#from-console)
-	* [TODO](#todo)
-	* [Contributing](#contributing)
+    * [Single-query template files:](#single-query-template-files)
+    * [Mulitple-query template files:](#mulitple-query-template-files)
+        * [*template* parts:](#template-parts)
+        * [Valid *options*:](#valid-options)
+    * [Usage Examples](#usage-examples)
+        * [From NodeJS application:](#from-nodejs-application)
+        * [From console](#from-console)
+    * [TODO](#todo)
+    * [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
