@@ -28,8 +28,8 @@ and disallowing most powerful SQL and/or database-specific features.
 
 SQLTT allow us to maintain single version of each query while preserving the
 whole power of actual SQL also providing many advanced features such as reusing
-snipppets or whole queries and much more [much more](#features) fully embracing
-the [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
+snipppets or whole queries and [much more](#features) fully embracing the
+[DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
 
 
 Examples
@@ -39,7 +39,7 @@ Following are a few examples to better understand what *SQLTT* does and how
 powerful it is just in a glance.
 
 > For more detailed documentation go directly to the [Table of
-> Contents](table-of-contents) below.
+> Contents](#table-of-contents) below.
 
 
 ### Template example
@@ -97,8 +97,9 @@ sqltt.publish(module, q); // Export and make available from CLI
 
 <!-- {{{ -->
 
-This template example provide multiple queries in single file so, when invoked
-from command line without arguments, it will ask us for a query selection: 
+This specific template example provide multiple queries in single file so, when
+invoked from command line without arguments, it will ask us for a query
+selection:
 
 **$ ``node personnel.sql.js``**
 
@@ -209,10 +210,7 @@ db.queryRows(
 
 > **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
 > Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
-> so we could simply have wrote:
-> ```sql
-> db.queryRows(myQuery, inputData);
-> ```
+> so we could simply have wrote: ``db.queryRows(myQuery, inputData)``.
 
 
 <!-- }}} -->
