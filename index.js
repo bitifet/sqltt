@@ -24,7 +24,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             engName,
             envDefault,
         ] = [
-            me.getSource().default_engine,
+            me.options.default_engine,
             engName0,
             process.env[ENGINE_ENV_VAR],
         ]
@@ -188,17 +188,20 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // ---------------
 
     sqltt.publish = function publish(module, qSrc) {//{{{
-        module.exports = qSrc;                  // Exports it.
-        if (! module.parent) {
-            const args = process.argv.slice(2);  // Get shell arguments.
+        module.exports = qSrc;    // Library usage
+        if (! module.parent) {    // CLI usage
+            const args = process.argv.slice(2); // Get shell arguments.
             if (qSrc instanceof sqltt) {
                 console.log(qSrc.sql('cli', process.argv.slice(2)));
             } else {
-                const qId = args.shift()             // Extract first as query id.
-                console.log (qId
-                    ?  qSrc[qId].sql('cli', args)       // Render query if selected
-                    : "Available queries: " + Object.keys(qSrc).join(", ")
-                );  // ...and provide available queries list if no argument provided.
+                const qId = args.shift()        // Extract first as query id.
+                if (! qId || ! qSrc[qId]) { // Unexistent query or unspecified.
+                    // List available ones:
+                    console.log ("Available queries: " + Object.keys(qSrc).join(", "));
+                } else {
+                    // Render selected query:
+                    console.log (qSrc[qId].sql('cli', args));
+                };
             };
         };
     };//}}}
