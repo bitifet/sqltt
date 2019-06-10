@@ -11,25 +11,9 @@ feature.
 > and progressively evolving until it had become too big to agglutinate all
 > possible features I have been adding over time.
 
-SQL is a powerful language, but most databases come with their own variations
-and nuances.
-
-Even for the same database engine, the syntax used in application libraries and
-[CLI](https://en.wikipedia.org/wiki/Command-line_interface#Other_command-line_interfaces)
-interpreters usually differs. At least for parametyzed queries.
-
-This often forces developers to modify their queries back and forth to test
-them in database CLI or, even worst, when they need to support different
-database engines. In which case they are most times forced to mantain
-completely different versions of the same query for each supported database.
-
-ORM solutions solve that problem at the cost of generating suboptimal queries
-and disallowing most powerful SQL and/or database-specific features.
-
-SQLTT allow us to maintain single version of each query while preserving the
-whole power of actual SQL also providing many advanced features such as reusing
-snipppets or whole queries and [much more](#features) fully embracing the
-[DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
+|                       |                               |               |                               |
+|-----------------------|-------------------------------|---------------|-------------------------------|
+| [Examples](#examples) | [Usage Manual](#usage-manual) | [TODO](#todo) | [Contributing](#contributing) |
 
 
 Examples
@@ -216,6 +200,10 @@ db.queryRows(
 <!-- }}} -->
 
 
+
+USAGE MANUAL
+============
+
 Table of Contents
 -----------------
 
@@ -223,30 +211,30 @@ Table of Contents
 
 <!-- vim-markdown-toc GitLab -->
 
-* [UPDATED:](#updated)
-    * [FEATURES](#features)
-    * [SETUP AND USAGE](#setup-and-usage)
-        * [Package setup](#package-setup)
-        * [Writing templates](#writing-templates)
-        * [Usage](#usage)
-            * [From application](#from-application)
-            * [From CLI](#from-cli)
-                * [Providing arguments](#providing-arguments)
-                * [Executing queries](#executing-queries)
-                * [Selecting Engine Flavour](#selecting-engine-flavour)
-    * [TEMPLATE FORMAT](#template-format)
-        * [SQL Callback](#sql-callback)
-    * [API REFERENCE](#api-reference)
-        * [Template API](#template-api)
-            * [sql(engFlavour)](#sqlengflavour)
-            * [args(argData)](#argsargdata)
-            * [concat(str)](#concatstr)
-            * [split(engFlavour)](#splitengflavour)
-        * [Tag API](#tag-api)
-            * [arg(argName)](#argargname)
-            * [literal(str)](#literalstr)
-            * [include(src [, bindings])](#includesrc-bindings)
-        * [keys(), values() and entries()](#keys-values-and-entries)
+* [ABOUT SQLTT](#about-sqltt)
+* [FEATURES](#features)
+* [SETUP AND USAGE](#setup-and-usage)
+    * [Package setup](#package-setup)
+    * [Writing templates](#writing-templates)
+    * [Usage](#usage)
+        * [From application](#from-application)
+        * [From CLI](#from-cli)
+            * [Providing arguments](#providing-arguments)
+            * [Executing queries](#executing-queries)
+            * [Selecting Engine Flavour](#selecting-engine-flavour)
+* [TEMPLATE FORMAT](#template-format)
+    * [SQL Callback](#sql-callback)
+* [API REFERENCE](#api-reference)
+    * [Template API](#template-api)
+        * [sql(engFlavour)](#sqlengflavour)
+        * [args(argData)](#argsargdata)
+        * [concat(str)](#concatstr)
+        * [split(engFlavour)](#splitengflavour)
+    * [Tag API](#tag-api)
+        * [arg(argName)](#argargname)
+        * [literal(str)](#literalstr)
+        * [include(src [, bindings])](#includesrc-bindings)
+    * [keys(), values() and entries()](#keys-values-and-entries)
 * [OUTDATED:](#outdated)
     * [Single-query template files:](#single-query-template-files)
     * [Mulitple-query template files:](#mulitple-query-template-files)
@@ -255,18 +243,53 @@ Table of Contents
     * [Usage Examples](#usage-examples)
         * [From NodeJS application:](#from-nodejs-application)
         * [From console](#from-console)
-    * [TODO](#todo)
-    * [Contributing](#contributing)
+    * [Template Examples](#template-examples)
+        * [Simple template file](#simple-template-file)
+        * [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
+        * [Full example with nested templates](#full-example-with-nested-templates)
+    * [Supported Database Engines](#supported-database-engines)
+        * [Adding more Database Engines](#adding-more-database-engines)
+    * [Advanced Features](#advanced-features)
+        * [Hooks](#hooks)
+        * [SQL Alternatives](#sql-alternatives)
+        * [String Concatenation](#string-concatenation)
+* [TODO](#todo)
+* [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
 <!-- }}} -->
 
 
-UPDATED:
-========
 
-(Future 1.0.0 version)
+ABOUT SQLTT
+-----------
+
+
+<!-- {{{ -->
+
+SQL is a powerful language, but most databases come with their own variations
+and nuances.
+
+Even for the same database engine, the syntax used in application libraries and
+[CLI](https://en.wikipedia.org/wiki/Command-line_interface#Other_command-line_interfaces)
+interpreters usually differs. At least for parametyzed queries.
+
+This often forces developers to modify their queries back and forth to test
+them in database CLI or, even worst, when they need to support different
+database engines. In which case they are most times forced to mantain
+completely different versions of the same query for each supported database.
+
+ORM solutions solve that problem at the cost of generating suboptimal queries
+and disallowing most powerful SQL and/or database-specific features.
+
+SQLTT allow us to maintain single version of each query while preserving the
+whole power of actual SQL also providing many advanced features such as reusing
+snipppets or whole queries and [much more](#features) fully embracing the
+[DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
+
+
+<!-- }}} -->
 
 
 FEATURES
@@ -682,13 +705,12 @@ It retruns an array of new *sqltt* instances for those subqueries.
 
 
 OUTDATED:
-=========
+---------
 
 (from version 0.3.1 and earlier)
 
 
-Single-query template files:
-----------------------------
+### Single-query template files:
 
 *sqltt* is intended to be required from SQL template files. (See [Template
 Examples](#template-examples) below). 
@@ -736,8 +758,7 @@ $ SQLTT_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
 $ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ```
 
-Mulitple-query template files:
-------------------------------
+### Mulitple-query template files:
 
 For small queries, sometimes it turns out being more practical gathering them
 together into single file exported as *key*->*value* object.
@@ -783,7 +804,7 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
 ```
 
 
-### *template* parts:
+#### *template* parts:
 
   * ``sql``: **(Mandatory)** Actual SQL template of the following form (See
     [examples](#template-examples) below):
@@ -798,15 +819,14 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
     query being included beside others through ``$.include([subq1, ...])``.
 
 
-### Valid *options*:
+#### Valid *options*:
 
   * **check_arguments** (default: *true*): Allows to avoid template's *args*
     validation checks (they will be auto-corrected instead of throwing an
     error).
 
 
-Usage Examples
---------------
+### Usage Examples
 
 >
 **NOTE:** All examples are for *PostgreSQL* engines. Either case, if engine is
@@ -814,7 +834,7 @@ not specified, a "generic" one gets used (which nowadays is exactly the same as
 Postgres one).
 >
 
-### From NodeJS application:
+#### From NodeJS application:
 
 ```javascript
 const myQuery = require('path/to/myQuery.sql.js');
@@ -839,7 +859,7 @@ db.queryRows(
 > ```
 
 
-### From console
+#### From console
 
 **For inspection:**
 ```sh
@@ -857,15 +877,15 @@ SQLTT_ENGINE=postgresql node path/to/myQuery.sql.js arg1, arg2 | psql dbName [ot
 ```sh
 SQLTT_ENGINE=postgresql node path/to/myQueryRepo.sql.js queryName
 # ... arg1, arg2 | psql dbName [...] # To execute
+```
 
 
 
 
-Template Examples
------------------
+### Template Examples
 
 
-### Simple template file
+#### Simple template file
 
 ```javascript
 const sqltt = require("sqltt");
@@ -896,7 +916,7 @@ them](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_
 >
 
 
-### Simpler template example with no boilerplate
+#### Simpler template example with no boilerplate
 
 ```javascript
 module.exports = $ => ({
@@ -919,7 +939,7 @@ single file and only instantiate those we are actually going to use.
 >
 
 
-### Full example with nested templates
+#### Full example with nested templates
 
 ```javascript
 const sqltt = require("sqltt");
@@ -952,8 +972,7 @@ one](#simpler-template-example-with-no-boilerplate)).
 >
 
 
-Supported Database Engines
---------------------------
+### Supported Database Engines
 
 Currently supported engines are:
 
@@ -963,17 +982,16 @@ Currently supported engines are:
 
 ...and oracle still lacks CLI implementation (so fails back to default one).
 
-### Adding more Database Engines
+#### Adding more Database Engines
 
 If you are interested in adding more engines or improving existing ones, check
 ``lib/engines.js`` file (They're too easy to implement) and please, feel free to
 send me patches to include your improvements.
 
 
-Advanced Features
------------------
+### Advanced Features
 
-### Hooks
+#### Hooks
 
 Hooks lets us to wrap arguments differently according to the actual engine.
 
@@ -1028,7 +1046,7 @@ the actual SQL (just commenting in and out that hook).
 ```
 
 
-### SQL Alternatives
+#### SQL Alternatives
 
 If it is impossible or unreasonable to use the same sql structure for some
 database engines, *sqltt* allows to specify a completely different sql source
@@ -1059,7 +1077,7 @@ order is hardly encouraged.
 >
 
 
-### String Concatenation
+#### String Concatenation
 
 *sqltt* template instances provide a ``.concat(<string>)`` method returning a new
 instance whose ``sql(<whatever>)`` method will return provided string
@@ -1085,8 +1103,6 @@ db.queryRows(
 
 TODO
 ----
-
-  * Improve this README file.
 
   * Implement customisation opitons:
     - Smart indentation.
