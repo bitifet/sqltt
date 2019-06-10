@@ -197,8 +197,17 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // Static mehtods:
     // ---------------
 
-    sqltt.publish = function publish(module, qSrc) {//{{{
-        module.exports = qSrc;    // Library usage
+    sqltt.publish = function publish(module, qSrc, options) {//{{{
+        if (options !== undefined) {    // Library usage
+            if (qSrc instanceof sqltt) {
+                qSrc = qSrc.options(options);
+            } else {
+                Object.keys(qSrc).map(
+                    (key)=>qSrc[key]=qSrc[key].options(options)
+                );
+            };
+        };
+        module.exports = qSrc;
         if (! module.parent) {    // CLI usage
             const args = process.argv.slice(2); // Get shell arguments.
             if (qSrc instanceof sqltt) {
