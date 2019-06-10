@@ -8,6 +8,7 @@ const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
 const re_cli = /(?:^|_)((?:no)?cli)$/;
 const re_rowtrim = /^(?:\s*\n)*|(?:\n\s*)*$/g;
+const $options$ = Symbol();
 
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -24,7 +25,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             engName,
             envDefault,
         ] = [
-            me.options.default_engine,
+            me[$options$].default_engine,
             engName0,
             process.env[ENGINE_ENV_VAR],
         ]
@@ -73,7 +74,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         return hlp.sortArgs(
             sourceTpl.args || []
             , typeof tplArgs == "object" ? tplArgs : []
-            , me.options.check_arguments
+            , me[$options$].check_arguments
         );
     };//}}}
     function loadTemplate(me, inTpl) {//{{{
@@ -126,7 +127,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
     function sqltt(sourceTpl, options = {}) {//{{{
         const me = this;
-        me.options = options;
+        me[$options$] = options;
         loadTemplate(me, sourceTpl);
         checkTemplate(me);
         me.sqlCache = {};
@@ -167,11 +168,20 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             , { sql: (...args) => me.sql(...args) + str }
         );
     };//}}}
+    sqltt.prototype.options = function concat(opts) {//{{{
+        const me = this;
+        const clone = Object.assign(
+            Object.create(Object.getPrototypeOf(me))
+            , me
+        );
+        clone[$options$] = {...me[$options$], ...opts};
+        return clone;
+    };//}}}
     sqltt.prototype.split = function split(engFlav) {//{{{
         const me = this;
         const src = me.getSource(engFlav);
         const opts = Object.assign({}
-            , me.options
+            , me[$options$]
             , {check_arguments: false}
         );
         const sqlarr = hlp.qSplit(src.sql);
