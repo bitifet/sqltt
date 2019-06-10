@@ -6,14 +6,11 @@ Javascript Projects taking advantadge of the [ES6+ Tagged
 Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
 feature.
 
-> Original idea comes from [this StackOverflow
-> answer](https://stackoverflow.com/a/41136912/4243912) which I have been using
-> and progressively evolving until it had become too big to agglutinate all
-> possible features I have been adding over time.
-
-|                       |                               |               |                               |
-|-----------------------|-------------------------------|---------------|-------------------------------|
-| [Examples](#examples) | [Usage Manual](#usage-manual) | [TODO](#todo) | [Contributing](#contributing) |
+| 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                |
+|--------------------------------------------------------|-------------------------------------|-------------------------------|
+| [Template Syntax](#template-example)                   | [Features](#features)               | [ABOUT](#about-sqltt)         |
+| [Usage as CLI Tool](#executing-from-cli)               | [Template Format](#template-format) | [TODO](#todo)                 |
+| [Usage as Node Module](#using-from-nodejs-application) | [API Reference](#api-reference)     | [Contributing](#contributing) |
 
 
 Examples
@@ -21,9 +18,6 @@ Examples
 
 Following are a few examples to better understand what *SQLTT* does and how
 powerful it is just in a glance.
-
-> For more detailed documentation go directly to the [Table of
-> Contents](#table-of-contents) below.
 
 
 ### Template example
@@ -152,6 +146,7 @@ command line arguments:
 ### Using from NodeJS application:
 
 <!-- {{{ -->
+
 ```javascript
 const personnelSQL = require('path/to/personnel.sql.js');
 const db = require('ppooled-pg')(connection_data); // Or your preferred library.
@@ -213,6 +208,8 @@ Table of Contents
 
 * [ABOUT SQLTT](#about-sqltt)
 * [FEATURES](#features)
+* [BASIC CONCEPTS](#basic-concepts)
+    * [Engine flavours](#engine-flavours)
 * [SETUP AND USAGE](#setup-and-usage)
     * [Package setup](#package-setup)
     * [Writing templates](#writing-templates)
@@ -222,6 +219,7 @@ Table of Contents
             * [Providing arguments](#providing-arguments)
             * [Executing queries](#executing-queries)
             * [Selecting Engine Flavour](#selecting-engine-flavour)
+            * [Query output inspection](#query-output-inspection)
 * [TEMPLATE FORMAT](#template-format)
     * [SQL Callback](#sql-callback)
 * [API REFERENCE](#api-reference)
@@ -288,12 +286,18 @@ whole power of actual SQL also providing many advanced features such as reusing
 snipppets or whole queries and [much more](#features) fully embracing the
 [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
 
+> 💡 **Original Idea:** Original idea comes from [this StackOverflow
+> answer](https://stackoverflow.com/a/41136912/4243912) which I have been using
+> and progressively evolving until it had become too big to agglutinate all
+> possible features I have been adding over time.
+
 
 <!-- }}} -->
 
 
 FEATURES
 --------
+
 <!-- {{{ -->
   * DRY: 
     - Write single SQL template.
@@ -373,6 +377,15 @@ FEATURES
       Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
 <!-- }}} -->
 
+
+BASIC CONCEPTS
+--------------
+
+### Engine flavours
+
+FIXME: Write out this subject...
+
+
 SETUP AND USAGE
 ---------------
 
@@ -418,8 +431,9 @@ template sources.
 
 ### Usage
 <!-- {{{ -->
-The final ``sqltt.publish(module, tpl)`` statement in previous examples
-replaces classic ``module.exports = tpl`` and is almost equivalent to:
+The final ``sqltt.publish(module, tpl)`` statement in [previous
+examples](#writing-templates) replaces classic ``module.exports = tpl`` and is
+almost equivalent to:
 
 ```javascript
 module.exports = tpl;                      // Exports template.
@@ -499,34 +513,34 @@ queries.
 **Example:**
 
 ```sh
-user@host:~/examples$ node users.sql.js
-Available queries: list, getProfile, insert, update
+user@host:~/examples$ node personnel.sql.js
+Available queries: list, listByDept, show, insert, update
 ```
 
 ...then we just need to pick for the desired query to render:
 
 ```sh
-user@host:~/examples$ node users.sql.js list
+user@host:~/examples$ node personnel.sql.js list
 
-select * from users;
+select * from personnel;
 
 ```
 <!-- }}} -->
 
 ##### Providing arguments
 <!-- {{{ -->
-If our query requires arguments, we can feed it simply adding them to the
+If our query requires arguments, we can feed it by simply adding them to the
 command line:
 
 **Example:**
 
 ```sh
-user@host:~/examples$ node users.sql.js getProfile 23
+user@host:~/examples$ node personnel.sql.js show 23
 
 \set user_id '''23'''
     select *
-    from users
-    where id = :user_id
+    from personnel
+    where id = :id
 
 ```
 
@@ -537,10 +551,16 @@ user@host:~/examples$ node users.sql.js getProfile 23
 > database engines will automatically cast them as numbers when needed.
 <!-- }}} -->
 
+
 ##### Executing queries
 <!-- {{{ -->
+If we want to directly execute the query instead, we just need to pipe it to
+our preferred database CLI interpreter.
+
+**Example:**
+
 ```sh
-user@host:~/examples$ node users.sql.js list | psql tiaDB
+user@host:~/examples$ node personnel.sql.js list | psql tiaDB
 
  id |   name    | sex | dptName        |   birth    |           ctime
 ----+-----------+-----+----------------+------------+----------------------------
@@ -567,6 +587,14 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
   b) Setting just for single execution (Ex.: ``SQLTT_ENGINE=oracle node
       myTpl.sql.js ...``).
 <!-- }}} -->
+
+
+##### Query output inspection
+
+
+(nocli, *_nocli)
+
+
 
 TEMPLATE FORMAT
 ---------------
@@ -894,7 +922,7 @@ const q = new sqltt({
                                                // (optional)
     sql: /* @@sql@@ */ $=>$`
         select *
-        from users
+        from personnel
         where company_name = ${"company_name"}
         and company_dept = ${"company_dept"}
     `, /* @@/sql@@ */
@@ -948,7 +976,7 @@ const q = new sqltt({
         with usersCte as (
             ${
                 // Include another query:
-                $.include(require("./users.sql.js"))
+                $.include(require("./personnel.sql.js"))
             }
         )
         select *
