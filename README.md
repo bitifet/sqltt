@@ -36,37 +36,37 @@ const sqltt = require("sqltt");
 const commonFields = ["dptId", "name", "sex", "birth"];
 
 
-const q = {};
+const tpl = {};
 
-q.list = new sqltt(`
+tpl.list = new sqltt(`
     select id, dptName, name
     from personnel
     join depts using(dptId)
 `);
 
-q.listByDept = new sqltt($=>$`
-    ${q.list}                 ${$.REM("Same as ${$.include(q.list)}")}
+tpl.listByDept = new sqltt($=>$`
+    ${tpl.list}                 ${$.REM("Same as ${$.include(tpl.list)}")}
     where dptId = ${"dptId"}  ${$.REM("Same as ${$.arg('dptId')}")}
 `);
 
-q.show = new sqltt($=>$`
+tpl.show = new sqltt($=>$`
     select id, dptName, name, birth, ctime
     from personnel
     join depts using(dptId)
     where id = ${"id"}
 `);
 
-q.insert = new sqltt($=>$`
+tpl.insert = new sqltt($=>$`
     insert into personnel (${$.keys(commonFields)})
     values (${$.values(commonFields)})
 `);
 
-q.update = new sqltt($=>$`
+tpl.update = new sqltt($=>$`
     update personnel set ${$.entries(commonFields)}
     where id = ${"id"}
 `);
 
-sqltt.publish(module, q); // Export and make available from CLI
+sqltt.publish(module, tpl); // Export and make available from CLI
 ```
 
 <!-- }}} -->
@@ -85,9 +85,9 @@ selection:
 Available queries: list, listByDept, show, insert, update
 ```
 
-> **NOTE:** If single SQLTT template where exported in that file, we would had
-> obtained its SQL instead just as we are going to get right now by specifying
-> it.
+> 📌 If single SQLTT template where published in that file, we would had
+> obtained its SQL instead just like we are going to obtain right now by
+> specifying it.
 
 Now we can obtain desired query just specifying it as a parameter:
 
@@ -147,29 +147,49 @@ command line arguments:
 
 <!-- {{{ -->
 
+Since we export our templates as SQLTT instances we just need to require and
+start using them.
+
+> 📌 In [previous example](#template-example) we *published* our templates
+> through ``sqltt.publish(module, tpl);`` statement which, from our point of
+> view now, is the exact same as exporting them through ``module.exports =
+> tpl;`` except for the fact that this way it wouldn't have been [usable from
+> CLI](#executing-from-cli) too like it had.
+
+Either if we exported/published single *SQLTT Template* or multiple ones, now
+we are able to use them through multiple methods which we call them our
+*[Template API](#template-api)*.
+
+
+**Example:**
+
 ```javascript
 const personnelSQL = require('path/to/personnel.sql.js');
-const db = require('ppooled-pg')(connection_data); // Or your preferred library.
-const inputData = {
-    arg1: "value1",
-    arg2: "value2",
-    /* ... */
-}
 
-// List all personnel
-db.queryRows(
-    personnelSQL.list.sql("postgresql")
-    , []
-).then(rows=>console.log(rows);
+// Show rendered SQL of each query:
+console.log (personnelSQL.list.sql());
+console.log (personnelSQL.listByDept.sql());
+console.log (personnelSQL.show.sql());
+console.log (personnelSQL.insert.sql());
+console.log (personnelSQL.update.sql());
+```
 
-// List given dept personnel
-const dptId = 'adm';
-db.queryRows(
-    personnelSQL.listByDept.sql("postgresql")
-    , [dptId]
-).then(rows=>console.log(rows);
 
+> 📌 ``.sql()`` method also accepts an optional parameter to specify desired
+> [engine flavour](#engine-flavours). If not specified, default one is used.
+
+
+Another commonly used *[Template API](#template-api)* method is ``.args()``
+which let us to convert a *{key: value}* pairs object to a properly sorted
+arguments array to feed our database query method.
+
+
+**Example using [ppooled-pg](https://www.npmjs.com/package/ppooled-pg):**
+
+```javascript
 // Insert new item
+const personnelSQL = require('path/to/personnel.sql.js');
+const db = require('ppooled-pg')(/*connection data*/);
 const newPerson = {
     name: "Chorizez",
     dptId: "robbers",
@@ -183,14 +203,18 @@ const newPerson = {
 };
 db.queryRows(
     personnelSQL.insert.sql("postgresql")
-    , personnelSQL.args(newPerson)
+    , personnelSQL.insert.args(newPerson)
 ).then(rows=>console.log(rows);
 ```
 
-> **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
+> 📌 From version 0.3.0, [ppooled-pg natively supports for *SQL Tagged
 > Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
-> so we could simply have wrote: ``db.queryRows(myQuery, inputData)``.
+> so we could simply have wrote: ``db.queryRows(personnelSQL.insert,
+> newPerson)``.
 
+
+See *[Template API](#template-api)* secton for more details of available
+methods and their options.
 
 <!-- }}} -->
 
@@ -201,8 +225,6 @@ USAGE MANUAL
 
 Table of Contents
 -----------------
-
-<!-- {{{ -->
 
 <!-- vim-markdown-toc GitLab -->
 
@@ -228,6 +250,7 @@ Table of Contents
         * [args(argData)](#argsargdata)
         * [concat(str)](#concatstr)
         * [split(engFlavour)](#splitengflavour)
+        * [options(optsObject)](#optionsoptsobject)
     * [Tag API](#tag-api)
         * [arg(argName)](#argargname)
         * [literal(str)](#literalstr)
@@ -255,10 +278,6 @@ Table of Contents
 * [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
-
-<!-- }}} -->
-
-
 
 ABOUT SQLTT
 -----------
@@ -443,7 +462,7 @@ module.parent || console.log(              // Allow CLI usage.
 ```
 
 > 👉 In fact it's slightly more complicated in order to properly handle
-> multiple-template files too as we will see below.
+> multiple-template files too as well as other slight nuances.
 
 This allows us to use our constructed sqltt instances:
 
@@ -468,8 +487,8 @@ const args = myQuery.args({
 // myDb.query(sql, args);
 ```
 
-> **NOTE:** The ``'postgresql'`` argument in ``myQuery.sql('postgresql')``
-> statement tells *SQLTT* to render *PostgreSQL* flavoured SQL syntax.
+> 📌 The ``'postgresql'`` argument in ``myQuery.sql('postgresql')`` statement
+> tells *SQLTT* to render *PostgreSQL* flavoured SQL syntax.
 >
 > Nowadays ``'postgresql'`` and ``'default'`` engine flavours works just the
 > same. But other databases may have some nuances such as Oracle's way to specify
@@ -544,8 +563,8 @@ user@host:~/examples$ node personnel.sql.js show 23
 
 ```
 
-> **NOTE:** From command line, when an argument is numeric, we can't tell whether
-> it is intended to be an actual number type or string.
+> 📌 From command line, when an argument is numeric, we can't tell whether it
+> is intended to be an actual number type or string.
 >
 > For this reason all arguments are quoted unconditionally given that most
 > database engines will automatically cast them as numbers when needed.
@@ -701,12 +720,14 @@ sqltt(_my_template_)`), we are allowed to use below methods:
   * *argData:* Can be a simple array
 
 
+
 #### concat(str)
 
 
 #### split(engFlavour)
 
 
+#### options(optsObject)
 
 
 Another *sqltt* instance's method is `.split(<engineType>)`.
@@ -856,11 +877,10 @@ $ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
 
 ### Usage Examples
 
->
-**NOTE:** All examples are for *PostgreSQL* engines. Either case, if engine is
-not specified, a "generic" one gets used (which nowadays is exactly the same as
-Postgres one).
->
+
+> 📌 All examples are for *PostgreSQL* engines. Either case, if engine is not
+> specified, a "generic" one gets used (which nowadays is exactly the same as
+> Postgres one).
 
 #### From NodeJS application:
 
@@ -879,7 +899,7 @@ db.queryRows(
 ).then(rows=>console.log(rows);
 ```
 
-> **NOTE:** From version 0.3.0, [ppooled-pg supports for *SQL Tagged
+> 📌 From version 0.3.0, [ppooled-pg supports for *SQL Tagged
 > Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
 > so we could simply have wrote:
 > ```sql
@@ -935,13 +955,11 @@ module.exports = q;
 module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
+> 📌 ``/* @@sql@@ */`` and ``/* @@/sql@@ */`` comments are optional (and, for
+> the sake of simplicity, I won't use them again in this document.
 >
-**NOTE:** ``/* @@sql@@ */`` and ``/* @@/sql@@ */`` comments are optional (and, for
-the sake of simplicity, I won't use them again in this document.
->
-I only left them once because I'm sure that vim users [will enjoy
-them](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
->
+> I only left them once because I'm sure that vim users [will enjoy
+> them](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
 
 
 #### Simpler template example with no boilerplate
@@ -957,14 +975,12 @@ module.exports = $ => ({
 });
 ```
 
+> 📌 This version should be used to instantiate *sqltt* (e.g: ``const myQuery =
+> new sqltt(require("path/to/myQuery.sql.js"))``) and connot be used [from
+> console](#from-console).
 >
-**NOTE:** This version should be used to instantiate *sqltt* (e.g: ``const
-myQuery = new sqltt(require("path/to/myQuery.sql.js"))``) and connot be used
-[from console](#from-console).
->
-The only advantadge of this approach is that we can bundle many queries in
-single file and only instantiate those we are actually going to use.
->
+> The only advantadge of this approach is that we can bundle many queries in
+> single file and only instantiate those we are actually going to use.
 
 
 #### Full example with nested templates
@@ -993,11 +1009,9 @@ module.exports = q;
 module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
->
-**NOTE:** It does not matter if nested templates are already instantiated (like
-[first example](#simple-template-file)) or not like ([second
-one](#simpler-template-example-with-no-boilerplate)).
->
+> 📌 It does not matter if nested templates are already instantiated (like
+> [first example](#simple-template-file)) or not like ([second
+> one](#simpler-template-example-with-no-boilerplate)).
 
 
 ### Supported Database Engines
@@ -1027,10 +1041,8 @@ They consist on a function that takes the original string and the engine name.
 If this function returns a non falsy value, the argument is replaced by that in
 the query. Otherwise it remains untouched.
 
->
-**NOTE:** Hooks can also be applied to non argument keywords. To do so we need
-interpolate them using [literal() tag method](#literalstr).
->
+> 📌 Hooks can also be applied to non argument keywords. To do so we need
+> interpolate them using [literal() tag method](#literalstr).
 
 
 to escape them as if it were real arguments and then wrap it as an array. This
@@ -1098,11 +1110,9 @@ module.exports = q;
 module.parent || console.log(q.sql('cli', process.argv.slice(2)));
 ```
 
->
-**NOTE:** Argument names and order are checked to be the same in all query
-alternatives to ensure its consistency so using *args* property to fix their
-order is hardly encouraged.
->
+> 📌 Argument names and order are checked to be the same in all query
+> alternatives to ensure its consistency so using *args* property to fix their
+> order is hardly encouraged.
 
 
 #### String Concatenation
