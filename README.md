@@ -1,10 +1,12 @@
-SQLTT - SQL Tagged Templates
-============================
+![SQLTT - SQL Tagged Templates](sqltt_logo.png "SQLTT - SQL Tagged Templates")
+==============================================================================
 
 *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
 Javascript Projects taking advantadge of the [ES6+ Tagged
 Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
 feature.
+
+-------------------------------------------------------------------------------------
 
 | 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                |
 |--------------------------------------------------------|-------------------------------------|-------------------------------|

@@ -1,6 +1,7 @@
 node_modules
 **/*.sw*
 examples
+resources
 tests
 CHANGELOG.txt
 LICENSE
