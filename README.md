@@ -6,7 +6,6 @@ Javascript Projects taking advantadge of the [ES6+ Tagged
 Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
 feature.
 
--------------------------------------------------------------------------------------
 
 | 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                |
 |--------------------------------------------------------|-------------------------------------|-------------------------------|
