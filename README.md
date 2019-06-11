@@ -36,7 +36,6 @@ or even directly execute it through a *CLI* interpreter.
 const sqltt = require("sqltt");
 const commonFields = ["dptId", "name", "sex", "birth"];
 
-
 const tpl = {};
 
 tpl.list = new sqltt(`
@@ -86,11 +85,10 @@ selection:
 Available queries: list, listByDept, show, insert, update
 ```
 
-> 📌 If single SQLTT template where published in that file, we would had
-> obtained its SQL instead just like we are going to obtain right now by
-> specifying it.
+> 📌 If single SQLTT template where published in that file, we would had got
+> its SQL instead just like we are going to obtain right now by specifying it.
 
-Now we can obtain desired query just specifying it as a parameter:
+Now we can obtain desired query just by specifying it as a parameter:
 
 **$ ``node personnel.sql.js list``**
 
@@ -212,13 +210,14 @@ db.queryRows(
 > Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
 > so we could simply have wrote: ``db.queryRows(personnelSQL.insert,
 > newPerson)``.
-
+>
+> But this example was intended to work with most database libraries with
+> minimum changes.
 
 See *[Template API](#template-api)* secton for more details of available
 methods and their options.
 
 <!-- }}} -->
-
 
 
 USAGE MANUAL
@@ -402,6 +401,31 @@ BASIC CONCEPTS
 --------------
 
 ### Engine flavours
+
+*SQLTT* is database agnostic in the sense that it only provide a templating
+layer and you are responsible to write SQL suitable for your specific
+database(s) engine(s).
+
+But, at the same time, provide you the tools to support multiple SQL syntax
+variations with single codebase.
+
+So, depending on targetted database or even if we are generating SQL for an
+application library or to be executed in a CLI interpreter, there could be
+subtle syntax differences *SQLTT* must care on.
+
+The most obvious one is the way positional parameters must be specified in an
+SQL string. Say:
+
+  * ``$1``, ``$2``, ``$3``, ... (Postgresql)
+  * ``:1``, ``:2``, ``:3``, ... (Oracle)
+  * Etc...
+
+Or even by variable name, at least in many database CLIs:
+
+  * ``:var1``, ``:var2``, ``:var3``, ... (Postgresql)
+
+
+> 🆘
 
 FIXME: Write out this subject...
 
