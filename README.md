@@ -3,6 +3,22 @@ SQLTT - SQL Tagged Templates
 
 > SQL Tagged Templates Engine
 
+UPDATE NOTICE
+-------------
+
+Version 0.4.0: Added *oracle-cli* engine.
+
+> :information_source: Future SQLTT 1.0.0 is almost done and will be published as
+> soon as its
+> [documentation](https://github.com/bitifet/sqltt/blob/interpolationAPI/README.md)
+> get properly updated.
+>
+> If you want to check it out, you can download it from its [GitHub
+> Repo](https://github.com/bitifet/sqltt/tree/interpolationAPI).
+>
+> :warning: Be carefull: It comes whith cool new features, but also some **BREAKING CHANGES**
+
+
 Index
 -----
 
@@ -276,6 +292,7 @@ Currently supported engines are:
   * *postgresql:* For PostgreSQL Database.
   * *postgresqlcli:* For PostgreSQL CLI output.
   * *oracle:* For Oracle Database.
+  * *oraclecli:* For Oracle CLI output.
 
 ...and oracle still lacks cli implementation (so fails back to default one).
 
