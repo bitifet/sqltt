@@ -1046,6 +1046,7 @@ Currently supported engines are:
   * *postgresql:* For PostgreSQL Database.
   * *postgresqlcli:* For PostgreSQL CLI output.
   * *oracle:* For Oracle Database.
+  * *oraclecli:* For Oracle CLI output.
 
 ...and oracle still lacks CLI implementation (so fails back to default one).
 
