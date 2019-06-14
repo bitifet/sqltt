@@ -29,8 +29,6 @@ TO-DO
     - Allow them to be simple array of argument names (to specify which are
       expected to be defined).
 
-  * Start writing out good manual ;-)
-
   * Improve .concat() concatenation (check for trailing space/return and add if
     neccessary).
 

@@ -231,7 +231,10 @@ Table of Contents
 * [ABOUT SQLTT](#about-sqltt)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
-    * [Engine flavours](#engine-flavours)
+    * [Engines](#engines)
+        * [Currently supported engines](#currently-supported-engines)
+    * [Engine Flavours and Targets](#engine-flavours-and-targets)
+        * [SQLTT_ENGINE environment variable](#sqltt_engine-environment-variable)
 * [SETUP AND USAGE](#setup-and-usage)
     * [Package setup](#package-setup)
     * [Writing templates](#writing-templates)
@@ -256,6 +259,8 @@ Table of Contents
         * [literal(str)](#literalstr)
         * [include(src [, bindings])](#includesrc-bindings)
     * [keys(), values() and entries()](#keys-values-and-entries)
+    * [Static Methods](#static-methods)
+        * [publish(module, tpl)](#publishmodule-tpl)
 * [OUTDATED:](#outdated)
     * [Single-query template files:](#single-query-template-files)
     * [Mulitple-query template files:](#mulitple-query-template-files)
@@ -318,17 +323,19 @@ FEATURES
 --------
 
 <!-- {{{ -->
-  * DRY: 
-    - Write single SQL template.
-    - Render it for [for your application](#from-application) properly
+  * Don't Repeat Yourself (DRY):
+    - Render SQL [for your application](#from-application) properly
       formatted for one or more database engines. Ex.:
       - PostgreSQL: ``myTpl.sql('postgresql') // select [...] where baz = $1``
       - Oracle: ``myTpl.sql('oracle')'        // select [...] where baz = :1``
       - ...
     - Generate [database-specific CLI versions](#executing-queries) too.
       - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
+      - Oracle: ``myTpl.sql('oracle_cli') // select [...] where BAZ = '&baz'``
       - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQLTT_ENGINE env var defined``
-    - ...all without changing anything.
+      - Or even simpler: Direct [call from command line](#executing-from-cli)
+        if ['.publish()' method used](#publishmodule-tpl).
+    - ...all with **single SQL template source**.
 
   * Very simple, readable and non-intrusive [template
     format](#template-format).
@@ -345,21 +352,6 @@ FEATURES
     - Generates properly sorted arguments array from a *{key: value,...}* object.
     - Missing keys defaults to *null* and unused ones are silently ignored.
     - Ex.: ``myTpl.args({foo: "fooVal", bar: "barVal"})``.
-
-  * Publishing helper: ``sqltt.publish(module, myTpl);``
-    - Assigns ``myTpl`` to ``module.exports`` (so exports it).
-    - If template file is directly invoked, outputs *CLI* SQL to stdout.
-      - ``node myTpl.sql.js`` outputs general cli output.
-      - ``SQLTT_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
-        flavoured CLI output.
-    - If myTpl is a *key: value* object instead, first argument is expected to
-      select which query is required.
-      - Ex.: ``node myTplLib.sql.js listQuery``
-      - If no argument provided in this case, a list of available keys will be
-        shown instead.
-    - Arguments are wrapped in a *set* commands.
-      - Ex.: ``node myTpl.sql parameter1 parameter2 "third parameter"``
-      - Ex.: ``node myTplLib.sql listBySection sectionId``
 
   * Direct execution: standard output can obviously redirected to any database
     sql interpreter.
@@ -400,13 +392,13 @@ FEATURES
 BASIC CONCEPTS
 --------------
 
-### Engine flavours
+### Engines
 
 *SQLTT* is database agnostic in the sense that it only provide a templating
 layer and you are responsible to write SQL suitable for your specific
 database(s) engine(s).
 
-But, at the same time, provide you the tools to support multiple SQL syntax
+But, at the same time, it provide you the tools to support multiple SQL syntax
 variations with single codebase.
 
 So, depending on targetted database or even if we are generating SQL for an
@@ -423,11 +415,62 @@ SQL string. Say:
 Or even by variable name, at least in many database CLIs:
 
   * ``:var1``, ``:var2``, ``:var3``, ... (Postgresql)
+  * ``'&var1'``, ``'&var2'``, ``'&var3'``, ... (Oracle)
+  * Etc...
+
+To handle these specific differences between targetted databases *SQLTT* uses
+small specialyzed libraries called *engines*.
+
+
+#### Currently supported engines
+
+Currently supported engines by SQLTT are:
+
+| Name               | Description                                         |
+|:-------------------|:----------------------------------------------------|
+| ``default``        | Generic standard (TODO: ANSI compilant) SQL.        |
+| ``default_cli``    | Generic standard SQL suitable for CLI interpreters. |
+| ``postgresql``     | PostgreSQL-specific SQL.                            |
+| ``postgresql_cli`` | PostgreSQL-specific SQL for its CLI (pgsql) client. |
+| ``oracle``         | Oracle-specific SQL.                                |
+| ``oracle_cli``     | Oracle-specific SQL for its CLI (sqlplus) client.   |
 
 
 > 🆘
 
 FIXME: Write out this subject...
+
+
+### Engine Flavours and Targets
+
+As you could see from previous table, we have two engines for each specific
+database flavour (PostgreSQL, Oracle, etc..): one targetting SQL for specific
+database application libraries and the other, suffixed by *_cli*, for database
+CLI interpreters.
+
+Sometimes we will only be interested in addressing desired flavour or desired
+target.
+
+For example, when we call the ``.sql()`` method, we are supposed to expect SQL
+for a database library. Not for CLI usage. So specifying 'postgresql' stands
+for 'posgresql' engine: not 'postgresql_cli'.
+
+On the other hand, when we want to [use it from CLI](from-cli) we may be
+interested in only select the cli-specific target but allowing to change the
+actual database flavour.
+
+#### SQLTT_ENGINE environment variable
+
+To do so we can simply specify 'cli'. This way 'default_cli' will be addressed
+by default, but it can be overridden by 'SQLTT_ENGINE' environment variable
+(only if exactly 'cli' is specified).
+
+On the other hand, even when 'cli' or *someFlavour_cli* is specified, we can
+set *SQLTT_ENGINE* to 'nocli' or *semeFlavour_nocli* in order to override CLI
+engine of selected database flavour.
+
+This can be useful if we only want to visually inspect how our query will be
+served to our application through `.sql()` (or `.sql(flavour)`) method.
 
 
 SETUP AND USAGE
@@ -619,7 +662,7 @@ user@host:~/examples$ node personnel.sql.js list | psql tiaDB
 ##### Selecting Engine Flavour
 <!-- {{{ -->
 To render SQL from CLI, *default_cli* engine is selected by default except if
-``default_engine`` property is defined in template source. For example, for
+[``default_engine`` option](#optionsoptsobject) is set. For example, for
 ``temlate_engine: "postgresql"``, *postgresqsl_cli* will be picked for instead.
 
 On the other hand, in case we want to specifically pick for given database
@@ -775,6 +818,27 @@ It retruns an array of new *sqltt* instances for those subqueries.
 
 ### keys(), values() and entries()
 
+
+### Static Methods
+
+#### publish(module, tpl)
+
+  TODO: Rewrite more detailed...
+
+  * Publishing helper: ``sqltt.publish(module, myTpl);``
+    - Assigns ``myTpl`` to ``module.exports`` (so exports it).
+    - If template file is directly invoked, outputs *CLI* SQL to stdout.
+      - ``node myTpl.sql.js`` outputs general cli output.
+      - ``SQLTT_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
+        flavoured CLI output.
+    - If myTpl is a *key: value* object instead, first argument is expected to
+      select which query is required.
+      - Ex.: ``node myTplLib.sql.js listQuery``
+      - If no argument provided in this case, a list of available keys will be
+        shown instead.
+    - Arguments are wrapped in a *set* commands.
+      - Ex.: ``node myTpl.sql parameter1 parameter2 "third parameter"``
+      - Ex.: ``node myTplLib.sql listBySection sectionId``
 
 
 
@@ -1167,6 +1231,12 @@ db.queryRows(
 
 TODO
 ----
+
+  * Implement Custom Engines:
+    - Engines are really simple libraries very easy to implement. But nowadays
+      they must be included in SQLTT package.
+    - Custom engines will allow users to implement their own engines extending
+      default ones just passing them as a specific option.
 
   * Implement customisation opitons:
     - Smart indentation.
