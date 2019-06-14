@@ -858,10 +858,7 @@ Template structure will usually be as follows:
 ```javascript
 const sqltt = require("sqltt");             // Require sqltt
 const q = new sqltt(template, options);     // Define a query template.
-module.exports = q;                         // Exports it.
-module.parent || console.log(               // Allow CLI usage.
-    q.sql('cli', process.argv.slice(2))     // Allow shell arguments
-);
+sqltt.publish(module, tpl);                 // Export and make available from CLI
 ```
 
 **Where:**
@@ -1146,18 +1143,17 @@ const sqltt = require("sqltt");
 const q = new sqltt({
     hooks: {
         // Prettier formatting on CLI output:
-        json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
-        // Fix lack of implicit casting in Oracle:
-        fromTimestamp: (arg, eng) => eng.match(/^oracle/) && "TO_DATE("+arg+", 'yyyy/mm/dd')",
+        user_profile: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
+        // Rename "bigint" cast to 
+        bigint: (arg, eng) => eng.match(/^oracle/) && "int",
     },
     sql: $=>$`
-        select ${["json_data"]}
-        from some_table
-        where some_column = ${"some_value"}
+        select id, name, ${$.literal("user_profile")}
+        from users
+        where cast(strCtime as ${$.literal("bigint")}) > ${"fromTimestamp"}
     `,
 });
-module.exports = q;
-module.parent || console.log(q.sql('cli', process.argv.slice(2)));
+sqltt.publish(module, tpl);
 ```
 
 There's a shorthand consisting in to simply specify an alternative string. In
@@ -1196,8 +1192,7 @@ const q = new sqltt({
         `
     }
 });
-module.exports = q;
-module.parent || console.log(q.sql('cli', process.argv.slice(2)));
+sqltt.publish(module, tpl);
 ```
 
 > 📌 Argument names and order are checked to be the same in all query
