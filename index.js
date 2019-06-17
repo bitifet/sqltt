@@ -183,21 +183,6 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         clone[$options$] = {...me[$options$], ...opts};
         return clone;
     };//}}}
-    sqltt.prototype.split = function split(engFlav) {//{{{
-        const me = this;
-        const src = me.getSource(engFlav);
-        const opts = Object.assign({}
-            , me[$options$]
-            , {check_arguments: false}
-        );
-        const sqlarr = hlp.qSplit(src.sql);
-        return sqlarr.map(function (sql) {
-            return new sqltt(Object.assign({}
-                , src
-                , {sql, altsql:{}}
-            ), opts)
-        });
-    };//}}}
 
 
     // Static mehtods and properties:

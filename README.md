@@ -252,7 +252,6 @@ Table of Contents
         * [sql(engFlavour)](#sqlengflavour)
         * [args(argData)](#argsargdata)
         * [concat(str)](#concatstr)
-        * [split(engFlavour)](#splitengflavour)
         * [options(optsObject)](#optionsoptsobject)
     * [Tag API](#tag-api)
         * [arg(argName)](#argargname)
@@ -792,19 +791,10 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 #### concat(str)
 
 
-#### split(engFlavour)
-
 
 #### options(optsObject)
 
 
-Another *sqltt* instance's method is `.split(<engineType>)`.
-
-This method picks the SQL for the specified engine (or default one if not
-specified or there isn't *altsql* specification for it) and splits it by all
-contained semicolons (`;`).
-
-It retruns an array of new *sqltt* instances for those subqueries.
 
 
 ### Tag API
