@@ -9,6 +9,11 @@ const sqlCompiler = require("./lib/sqlCompiler");
 const re_cli = /(?:^|_)((?:no)?cli)$/;
 const re_rowtrim = /^(?:\s*\n)*|(?:\n\s*)*$/g;
 const $options$ = Symbol();
+const Fs = require("fs");
+const SQLTT_VERSION = JSON.parse(
+    Fs.readFileSync(__dirname + "/package.json")
+).version;
+
 
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -127,6 +132,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
     function sqltt(sourceTpl, options = {}) {//{{{
         const me = this;
+        me.version = SQLTT_VERSION;
         me[$options$] = options;
         loadTemplate(me, sourceTpl);
         checkTemplate(me);
@@ -147,9 +153,9 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         const me = this;
         const eng = resolveEngine(me, engName);
         if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
-        const sqlt = me.getSource(eng.flavour).sql;
+        const qtpl = me.getSource(eng.flavour).sql;
 
-        const outSql = eng.wrapper.bind(me)(sqlt(new sqlCompiler(me, eng)), cliArgs);
+        const outSql = eng.wrapper.bind(me)(qtpl(new sqlCompiler(me, eng)), cliArgs);
         me.sqlCache[eng.name] = outSql;
         return outSql.replace(re_rowtrim, "");
     };//}}}
@@ -194,9 +200,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     };//}}}
 
 
-    // Static mehtods:
+    // Static mehtods and properties:
     // ---------------
 
+    sqltt.version = SQLTT_VERSION;
     sqltt.publish = function publish(module, qSrc, options) {//{{{
         if (options !== undefined) {    // Library usage
             if (qSrc instanceof sqltt) {

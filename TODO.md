@@ -39,4 +39,5 @@ Notes
 ### Oracle equivalences
 
 https://wiki.postgresql.org/wiki/Oracle_to_Postgres_Conversion
+http://www.sqlines.com/postgresql-to-oracle#most-complex-migration-issues
 
