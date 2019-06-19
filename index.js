@@ -190,17 +190,26 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
     sqltt.version = SQLTT_VERSION;
     sqltt.publish = function publish(module, qSrc, options) {//{{{
-        if (options !== undefined) {    // Library usage
+
+        // Allow to use global options specially for multi-template files:
+        if (options !== undefined) {
             if (qSrc instanceof sqltt) {
                 qSrc = qSrc.options(options);
             } else {
-                Object.keys(qSrc).map(
-                    (key)=>qSrc[key]=qSrc[key].options(options)
-                );
+                Object.keys(qSrc).map(function(key) {
+                    return qSrc[key]=qSrc[key] instanceof Array
+                        ? qSrc[key].map(q=>q.options(options))
+                        : qSrc[key].options(options)
+                    ;
+                });
             };
         };
+
+        // Export for library usage:
         module.exports = qSrc;
-        if (! module.parent) {    // CLI usage
+
+        // CLI usage:
+        if (! module.parent) {
             const args = process.argv.slice(2); // Get shell arguments.
             if (qSrc instanceof sqltt) {
                 console.log(qSrc.sql('cli', process.argv.slice(2)));
@@ -211,10 +220,24 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     console.log ("Available queries: " + Object.keys(qSrc).join(", "));
                 } else {
                     // Render selected query:
-                    console.log (qSrc[qId].sql('cli', args));
+                    let qList = qSrc[qId] instanceof Array
+                        ? qSrc[qId]
+                        : [qSrc[qId]]
+                    ;
+                    console.log (
+                        qList
+                            .map(q=>q.sql('cli', args))
+                            .join("\n;\n")
+                    )
                 };
             };
         };
+
+        // NOTE:
+        // Arrays of templates are allowed in order to specify multiple queries
+        // expected to execute in single transaction. Specially in databases
+        // like Oracle which doesn't support complex CTE's.
+
     };//}}}
 
     return sqltt;
