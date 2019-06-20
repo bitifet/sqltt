@@ -254,10 +254,10 @@ Table of Contents
         * [concat(str)](#concatstr)
         * [options(optsObject)](#optionsoptsobject)
     * [Tag API](#tag-api)
-        * [arg(argName)](#argargname)
+        * [arg(argName, alias)](#argargname-alias)
         * [literal(str)](#literalstr)
         * [include(src [, bindings])](#includesrc-bindings)
-    * [keys(), values() and entries()](#keys-values-and-entries)
+        * [keys(), values() and entries()](#keys-values-and-entries)
     * [Static Methods](#static-methods)
         * [publish(module, tpl)](#publishmodule-tpl)
 * [OUTDATED:](#outdated)
@@ -769,6 +769,7 @@ API REFERENCE
 After instantiating our template as SQLTT (`const myQuery = new
 sqltt(_my_template_)`), we are allowed to use below methods:
 
+
 #### sql(engFlavour)
 
 
@@ -799,14 +800,54 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 
 ### Tag API
 
+> 📌 Tag API methods outputs rendered SQL substrings in the propper syntax for
+> targetted database engine. Further examples will follow PostgreSQL syntax
+> unless otherwise said.
 
-#### arg(argName)
+#### arg(argName, alias)
+
+Provide the ability to interpolate an argument by its name.
+
+> 💡 In its simplest form (`${$.arg("argName")}`) (when *argName* is string and
+> *alias* is not provided) simple string (`${"argName"}`) as a *shorthand*
+> (Both will produce `$argName`).
+
+**Parameters:**
+
+  * *argName:* Argument name.
+  * *alias:* (Optional) Alias.
+
+> 📌 Arguments aren't usually aliased in a query, but they can be placed in the
+> projection too in order to complete it with constant data.
+
+**Enhnanced Behavious:**
+
+  * Passing an object as *argName* it will interpolate all keys as comma
+    separated SQL arguments using their values as alias (*alias*, if given will
+    be ignored).
+    - **Example:** `${$.arg({foo: "afoo", bar: "abar"})}` ➡ `$foo as afoo, $bar
+      as abar`.
+
+  * Using an array instead, will produce the same effect without aliases (if
+    *alias* not given or evaluates to false) or using the same name (else
+    case).
+    - **Examples:**
+      - `${$.arg([foo, bar])}` ➡ `$foo, $bar`.
+      - `${$.arg([foo, bar], true)}` ➡ `$foo as foo, $bar as bar`.
+
+> ⚠ The "as" keyword in previous examples had been written for the sake of
+> clarity only.
+>
+> No "as" keyword is currently rendered as it is invalid in many database engines
+> and, for those which accept it, it is optional anyway. Future SQLTT versions
+> may render it for engines that support it.
+
 
 #### literal(str)
 
 #### include(src [, bindings])
 
-### keys(), values() and entries()
+#### keys(), values() and entries()
 
 
 ### Static Methods
@@ -886,7 +927,7 @@ $ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ### Mulitple-query template files:
 
 For small queries, sometimes it turns out being more practical gathering them
-together into single file exported as *key*->*value* object.
+together into single file exported as *key* ➡ *value* object.
 
 We can achieve this with minimal changes to the previous pattern:
 

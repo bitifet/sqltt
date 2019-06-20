@@ -67,15 +67,15 @@ describe('sqltt class', function() {
             const q = $=>$`s ${"foo"}, ${$.arg("bar")}, ${$.arg(["baz1", "baz2"])}, ${["baz3", "baz4"]} f`;
             assert.equal(
                 hsql(q)
-                , "s $1, $2, ($3), ($4), $5, $6 f"
+                , "s $1, $2, $3, $4, $5, $6 f"
             );
             assert.equal(
                 hsql(q, "postgresql")
-                , "s $1, $2, ($3), ($4), $5, $6 f"
+                , "s $1, $2, $3, $4, $5, $6 f"
             );
             assert.equal(
                 hsql(q, "oracle")
-                , "s :1, :2, (:3), (:4), :5, :6 f"
+                , "s :1, :2, :3, :4, :5, :6 f"
             );
             assert.deepStrictEqual(
                 hargl(q)
