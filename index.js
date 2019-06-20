@@ -9,6 +9,7 @@ const sqlCompiler = require("./lib/sqlCompiler");
 const re_cli = /(?:^|_)((?:no)?cli)$/;
 const re_rowtrim = /^(?:\s*\n)*|(?:\n\s*)*$/g;
 const $options$ = Symbol();
+const _object_ = Object.getPrototypeOf({});
 const Fs = require("fs");
 const SQLTT_VERSION = JSON.parse(
     Fs.readFileSync(__dirname + "/package.json")
@@ -126,6 +127,22 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
         return src;
     };//}}}
+    function logQuery(qSrc, args) {// CLI output helper {{{
+        // Accept single query template or Array
+        let qList = qSrc instanceof Array
+            ? qSrc
+            : [qSrc]
+        ;
+        console.log (
+            qList
+                .map(function(q) {
+                    if (! (q instanceof sqltt)) throw "Not a sqltt instance.";
+                    return q.sql('cli', args);
+                })
+                .join("\n;\n")
+        );
+    };//}}}
+
 
     // Constructor:
     // ------------
@@ -212,24 +229,34 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (! module.parent) {
             const args = process.argv.slice(2); // Get shell arguments.
             if (qSrc instanceof sqltt) {
-                console.log(qSrc.sql('cli', process.argv.slice(2)));
+                logQuery(qSrc, args);
             } else {
                 const qId = args.shift()        // Extract first as query id.
-                if (! qId || ! qSrc[qId]) { // Unexistent query or unspecified.
-                    // List available ones:
+                if ( // Unexistent query or unspecified.{{{
+                    ! qId || ! qSrc[qId]
+                )//}}}
+                { // then - List available ones:{{{
                     console.log ("Available queries: " + Object.keys(qSrc).join(", "));
-                } else {
-                    // Render selected query:
-                    let qList = qSrc[qId] instanceof Array
-                        ? qSrc[qId]
-                        : [qSrc[qId]]
-                    ;
-                    console.log (
-                        qList
-                            .map(q=>q.sql('cli', args))
-                            .join("\n;\n")
-                    )
-                };
+                }//}}}
+                else if ( // Regular object{{{
+                    Object.getPrototypeOf(qSrc[qId]) === _object_
+                )//}}}
+                { // then - Threat simple objects as exported datasets:{{{
+                    console.log(
+                        (
+                            "\n"
+                            + String(
+                                qId + ' ' + JSON.stringify(qSrc[qId], null, 4)
+                            )
+                        )
+                        .replace(/\n/g, "\n-- ")
+                        .trim()
+                    );
+                }//}}}
+                else
+                { // Render selected query:{{{
+                    logQuery(qSrc[qId], args);
+                };//}}}
             };
         };
 
