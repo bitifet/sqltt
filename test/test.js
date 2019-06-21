@@ -115,7 +115,7 @@ describe('sqltt class', function() {
             const q = $=>$`s ${$.literal("foo")}, ${$.literal(["bar", "baz1"])}, ${[$.literal("baz2"), $.literal("baz3")]} f`;
             assert.equal(
                 hsql(q)
-                , "s foo, (bar), (baz1), baz2, baz3 f"
+                , "s foo, bar, baz1, baz2, baz3 f"
             );
 
         });//}}}
