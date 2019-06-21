@@ -823,10 +823,13 @@ Provide the ability to interpolate an argument by its name.
 **Enhnanced Behavious:**
 
   * Passing an object as *argName* it will interpolate all keys as comma
-    separated SQL arguments using their values as alias (*alias*, if given will
-    be ignored).
-    - **Example:** `${$.arg({foo: "afoo", bar: "abar"})}` ➡ `$foo as afoo, $bar
-      as abar`.
+    separated SQL arguments using their values as alias (*alias* argument, if
+    given will be ignored).
+    - Boolean false will disable alias for given key.
+    - Boolean true make key to be used as alias instead.
+    - **Example:**
+      - `${$.arg({foo: "afoo", bar: false, baz: true})}` ➡ `$foo as afoo, $bar,
+        $baz as baz`.
 
   * Using an array instead, will produce the same effect without aliases (if
     *alias* not given or evaluates to false) or using the same name (else
