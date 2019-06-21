@@ -809,8 +809,8 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 Provide the ability to interpolate an argument by its name.
 
 > 💡 In its simplest form (`${$.arg("argName")}`) (when *argName* is string and
-> *alias* is not provided) simple string (`${"argName"}`) as a *shorthand*
-> (Both will produce `$argName`).
+> *alias* is not provided) simple string (`${"argName"}`) can be usedas a
+> *shorthand* (Both will produce `$argName`).
 
 **Parameters:**
 
