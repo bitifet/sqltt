@@ -3,13 +3,6 @@ TO-DO list & notes
 
 TO-DO
 -----
-  * Modiry .arg(), when regular object provided, in order to use boolean true
-    value to mean that the key should be used as alias too and false to not put
-    an alias.
-
-  * Implement .and() and .or() methods with exact same behaviour of .arg() but:
-    - Joining with 'and'/'or' (respectively) instead of ','.
-    - Wrapping the whole thing in brackets.
 
   * Provide an option to decide, in cli output, wether non specified arguments
     will default to empty strings or its *set* commands not rendered at all (in

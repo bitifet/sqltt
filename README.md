@@ -255,9 +255,9 @@ Table of Contents
         * [options(optsObject)](#optionsoptsobject)
     * [Tag API](#tag-api)
         * [arg(argName, alias)](#argargname-alias)
-        * [literal(str)](#literalstr)
         * [include(src [, bindings])](#includesrc-bindings)
         * [keys(), values() and entries()](#keys-values-and-entries)
+        * [literal(str)](#literalstr)
     * [Static Methods](#static-methods)
         * [publish(module, tpl)](#publishmodule-tpl)
 * [OUTDATED:](#outdated)
@@ -804,39 +804,62 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 > targetted database engine. Further examples will follow PostgreSQL syntax
 > unless otherwise said.
 
+
 #### arg(argName, alias)
 
 Provide the ability to interpolate an argument by its name.
 
-> 💡 In its simplest form (`${$.arg("argName")}`) (when *argName* is string and
-> *alias* is not provided) simple string (`${"argName"}`) can be used as a
-> *shorthand* (Both will produce `$argName`).
-
-**Parameters:**
+**📝 Parameters:**
 
   * *argName:* Argument name.
   * *alias:* (Optional) Alias.
 
+**🏃 Shorthand:**
+
+In its simplest form (when *argName* is string and *alias* is not provided)
+simple string can be used as a *shorthand*.
+
+> **🗂️ Examples:**
+>
+>   * Explicit: `${$.arg("argName")}` ➡  `$argName`.
+>   * Using shorthand: `${"argName"}` ➡  `$argName`.
+
+
+**🚀 Enhnanced Behaviour:**
+
+  * If *alias* is provided, it is added after argument interpolation.
+
+> **🗂️ Example:**
+>
+>   * `${$.arg("foo", "afoo")}` ➡ `$foo as afoo`.
+
+<br />
+
 > 📌 Arguments aren't usually aliased in a query, but they can be placed in the
 > projection too in order to complete it with constant data.
-
-**Enhnanced Behavious:**
 
   * Passing an object as *argName* it will interpolate all keys as comma
     separated SQL arguments using their values as alias (*alias* argument, if
     given will be ignored).
     - Boolean false will disable alias for given key.
     - Boolean true make key to be used as alias instead.
-    - **Example:**
-      - `${$.arg({foo: "afoo", bar: false, baz: true})}` ➡ `$foo as afoo, $bar,
-        $baz as baz`.
+
+> **🗂️ Example:**
+>
+>   * `${$.arg({foo: "afoo", bar: false, baz: true})}` ➡ `$foo as afoo, $bar,
+>     $baz as baz`.
+
 
   * Using an array instead, will produce the same effect without aliases (if
     *alias* not given or evaluates to false) or using the same name (else
     case).
-    - **Examples:**
-      - `${$.arg([foo, bar])}` ➡ `$foo, $bar`.
-      - `${$.arg([foo, bar], true)}` ➡ `$foo as foo, $bar as bar`.
+
+> **🗂️ Example:**
+>
+>   * `${$.arg([foo, bar])}` ➡ `$foo, $bar`.
+>   * `${$.arg([foo, bar], true)}` ➡ `$foo as foo, $bar as bar`.
+
+<br />
 
 > ⚠ The "as" keyword in previous examples had been written for the sake of
 > clarity only.
@@ -846,14 +869,53 @@ Provide the ability to interpolate an argument by its name.
 > may render it for engines that support it.
 
 
-#### literal(str)
 
 #### include(src [, bindings])
+
+Provide the ability to nest other templates. 
+
+
+**📝 Parameters:**
+
+  * *src:* SQLTT instance or any valid SQLTT source (including raw string).
+  * *bindings:* (Optional) Argument bindings.
+
+**🏃 Shorthand:**
+
+
+**🗂️ Examples:**
+
 
 #### keys(), values() and entries()
 
 
+
+#### literal(str)
+
+Having regular strings are normally interpreted as shorthand for simple
+argument interpolations, ``.literal()`` provide a way to inject a raw string.
+
+Since ``select ${$.literal("foo")} from bar`` is the exact same of ``select foo
+from bar`` (with no interpolation at all), ``.literal()`` is mostly used
+internally by other *Tag API* functions.
+
+But it can also be useful in case we need to insert some calculated substring.
+
+**Example:**
+
+```javascript
+tpl.getUserData = new sqltt($ => ({
+    sql: $`
+        select *
+        from ${$.literal(get_table_name("users"))}
+        where user_id = ${"user_id"}
+    `,
+}));
+```
+
+
 ### Static Methods
+
 
 #### publish(module, tpl)
 
