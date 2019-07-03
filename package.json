@@ -1,6 +1,6 @@
 {
   "name": "sqltt",
-  "version": "1.0.0-6",
+  "version": "1.0.0-7",
   "description": "SQL Tagged Templates",
   "main": "index.js",
   "scripts": {
