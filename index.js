@@ -1,5 +1,5 @@
 "use strict";
-const ENGINE_ENV_VAR = 'SQLTT_ENGINE';
+const ENGINE_ENV_VAR = 'SQL_ENGINE';
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
 const argParser = (v)=>v===undefined?null:v;

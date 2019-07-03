@@ -241,7 +241,7 @@ compile them using [SQLTT CLI capabilities](#executing-from-cli) with [*_nocli*
 engines](#query-output-inspection):
 
 
-**$ ``SQLTT_ENGINE=postgresql_nocli node personnel.sql.js listByDept oper``**
+**$ ``SQL_ENGINE=postgresql_nocli node personnel.sql.js listByDept oper``**
 
 ```sql
     select id, dptId, dptName, name, sex
@@ -255,7 +255,7 @@ example:
 
 ```sh
 #!/bin/env sh
-export SQLTT_ENGINE=postgresql_nocli
+export SQL_ENGINE=postgresql_nocli
 
 node sqlsrc/personnel.sql.js list > sql/personnel.list.sql
 node sqlsrc/personnel.sql.js listByDept > sql/personnel.listByDept.sql
@@ -284,53 +284,53 @@ Table of Contents
 * [ABOUT SQLTT](#about-sqltt)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
-	* [Engines](#engines)
-		* [Currently supported engines](#currently-supported-engines)
-	* [Engine Flavours and Targets](#engine-flavours-and-targets)
-		* [SQLTT_ENGINE environment variable](#sqltt_engine-environment-variable)
+    * [Engines](#engines)
+        * [Currently supported engines](#currently-supported-engines)
+    * [Engine Flavours and Targets](#engine-flavours-and-targets)
+        * [SQL_ENGINE environment variable](#sql_engine-environment-variable)
 * [SETUP AND USAGE](#setup-and-usage)
-	* [Package setup](#package-setup)
-	* [Writing templates](#writing-templates)
-	* [Usage](#usage)
-		* [From application](#from-application)
-		* [From CLI](#from-cli)
-			* [Providing arguments](#providing-arguments)
-			* [Executing queries](#executing-queries)
-			* [Selecting Engine Flavour](#selecting-engine-flavour)
-			* [Query output inspection](#query-output-inspection)
+    * [Package setup](#package-setup)
+    * [Writing templates](#writing-templates)
+    * [Usage](#usage)
+        * [From application](#from-application)
+        * [From CLI](#from-cli)
+            * [Providing arguments](#providing-arguments)
+            * [Executing queries](#executing-queries)
+            * [Selecting Engine Flavour](#selecting-engine-flavour)
+            * [Query output inspection](#query-output-inspection)
 * [TEMPLATE FORMAT](#template-format)
-	* [SQL Callback](#sql-callback)
+    * [SQL Callback](#sql-callback)
 * [API REFERENCE](#api-reference)
-	* [Template API](#template-api)
-		* [sql(engFlavour)](#sqlengflavour)
-		* [args(argData)](#argsargdata)
-		* [concat(str)](#concatstr)
-		* [options(optsObject)](#optionsoptsobject)
-	* [Tag API](#tag-api)
-		* [arg(argName, alias)](#argargname-alias)
-		* [include(src [, bindings])](#includesrc-bindings)
-		* [keys(), values() and entries()](#keys-values-and-entries)
-		* [literal(str)](#literalstr)
-	* [Static Methods](#static-methods)
-		* [publish(module, tpl)](#publishmodule-tpl)
+    * [Template API](#template-api)
+        * [sql(engFlavour)](#sqlengflavour)
+        * [args(argData)](#argsargdata)
+        * [concat(str)](#concatstr)
+        * [options(optsObject)](#optionsoptsobject)
+    * [Tag API](#tag-api)
+        * [arg(argName, alias)](#argargname-alias)
+        * [include(src [, bindings])](#includesrc-bindings)
+        * [keys(), values() and entries()](#keys-values-and-entries)
+        * [literal(str)](#literalstr)
+    * [Static Methods](#static-methods)
+        * [publish(module, tpl)](#publishmodule-tpl)
 * [OUTDATED:](#outdated)
-	* [Single-query template files:](#single-query-template-files)
-	* [Mulitple-query template files:](#mulitple-query-template-files)
-		* [*template* parts:](#template-parts)
-		* [Valid *options*:](#valid-options)
-	* [Usage Examples](#usage-examples)
-		* [From NodeJS application:](#from-nodejs-application)
-		* [From console](#from-console)
-	* [Template Examples](#template-examples)
-		* [Simple template file](#simple-template-file)
-		* [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
-		* [Full example with nested templates](#full-example-with-nested-templates)
-	* [Supported Database Engines](#supported-database-engines)
-		* [Adding more Database Engines](#adding-more-database-engines)
-	* [Advanced Features](#advanced-features)
-		* [Hooks](#hooks)
-		* [SQL Alternatives](#sql-alternatives)
-		* [String Concatenation](#string-concatenation)
+    * [Single-query template files:](#single-query-template-files)
+    * [Mulitple-query template files:](#mulitple-query-template-files)
+        * [*template* parts:](#template-parts)
+        * [Valid *options*:](#valid-options)
+    * [Usage Examples](#usage-examples)
+        * [From NodeJS application:](#from-nodejs-application)
+        * [From console](#from-console)
+    * [Template Examples](#template-examples)
+        * [Simple template file](#simple-template-file)
+        * [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
+        * [Full example with nested templates](#full-example-with-nested-templates)
+    * [Supported Database Engines](#supported-database-engines)
+        * [Adding more Database Engines](#adding-more-database-engines)
+    * [Advanced Features](#advanced-features)
+        * [Hooks](#hooks)
+        * [SQL Alternatives](#sql-alternatives)
+        * [String Concatenation](#string-concatenation)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -387,7 +387,7 @@ FEATURES
     - Generate [database-specific CLI versions](#executing-queries) too.
       - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
       - Oracle: ``myTpl.sql('oracle_cli') // select [...] where BAZ = '&baz'``
-      - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQLTT_ENGINE env var defined``
+      - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQL_ENGINE env var defined``
       - Or even simpler: Direct [call from command line](#executing-from-cli)
         if ['.publish()' method used](#publishmodule-tpl).
     - ...all with **single SQL template source**.
@@ -511,14 +511,14 @@ On the other hand, when we want to [use it from CLI](from-cli) we may be
 interested in only select the cli-specific target but allowing to change the
 actual database flavour.
 
-#### SQLTT_ENGINE environment variable
+#### SQL_ENGINE environment variable
 
 To do so we can simply specify 'cli'. This way 'default_cli' will be addressed
-by default, but it can be overridden by 'SQLTT_ENGINE' environment variable
+by default, but it can be overridden by 'SQL_ENGINE' environment variable
 (only if exactly 'cli' is specified).
 
 On the other hand, even when 'cli' or *someFlavour_cli* is specified, we can
-set *SQLTT_ENGINE* to 'nocli' or *semeFlavour_nocli* in order to override CLI
+set *SQL_ENGINE* to 'nocli' or *semeFlavour_nocli* in order to override CLI
 engine of selected database flavour.
 
 This can be useful if we only want to visually inspect how our query will be
@@ -719,11 +719,11 @@ To render SQL from CLI, *default_cli* engine is selected by default except if
 
 On the other hand, in case we want to specifically pick for given database
 engine flavour when we are going to generate SQL from *CLI*, we can set the
-*SQLTT_ENGINE* environment variable in our shell either by:
+*SQL_ENGINE* environment variable in our shell either by:
 
-  a) Exporting it (Ex.: ``export SQLTT_ENGINE=postgresql``).
+  a) Exporting it (Ex.: ``export SQL_ENGINE=postgresql``).
 
-  b) Setting just for single execution (Ex.: ``SQLTT_ENGINE=oracle node
+  b) Setting just for single execution (Ex.: ``SQL_ENGINE=oracle node
       myTpl.sql.js ...``).
 <!-- }}} -->
 
@@ -978,7 +978,7 @@ tpl.getUserData = new sqltt($ => ({
     - Assigns ``myTpl`` to ``module.exports`` (so exports it).
     - If template file is directly invoked, outputs *CLI* SQL to stdout.
       - ``node myTpl.sql.js`` outputs general cli output.
-      - ``SQLTT_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
+      - ``SQL_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
         flavoured CLI output.
     - If myTpl is a *key: value* object instead, first argument is expected to
       select which query is required.
@@ -1037,9 +1037,9 @@ const args = myQuery.args({            // Get properly sorted and filtered
 # Get parametyzed sql to provide to some database CLI:
 $ node myQuery.sql.js arg1 arg2 "argument 3"
 # Do the same specifically for oracle engine:
-$ SQLTT_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
+$ SQL_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
 # You also can directly pipe to that CLI:
-$ SQLTT_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
+$ SQL_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ```
 
 ### Mulitple-query template files:
@@ -1146,19 +1146,19 @@ db.queryRows(
 
 **For inspection:**
 ```sh
-SQLTT_ENGINE=postgresql node path/to/myQuery.sql.js
+SQL_ENGINE=postgresql node path/to/myQuery.sql.js
 ```
 
 **For execution:**
 
 ```sh
-SQLTT_ENGINE=postgresql node path/to/myQuery.sql.js arg1, arg2 | psql dbName [other_arguments...]
+SQL_ENGINE=postgresql node path/to/myQuery.sql.js arg1, arg2 | psql dbName [other_arguments...]
 ```
 
 **In multiple query format:**
 
 ```sh
-SQLTT_ENGINE=postgresql node path/to/myQueryRepo.sql.js queryName
+SQL_ENGINE=postgresql node path/to/myQueryRepo.sql.js queryName
 # ... arg1, arg2 | psql dbName [...] # To execute
 ```
 
