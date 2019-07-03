@@ -1,5 +1,11 @@
+
 ![SQLTT - SQL Tagged Templates](sqltt_logo.png "SQLTT - SQL Tagged Templates")
-==============================================================================
+
+
+[![Known Vulnerabilities](https://snyk.io/test/npm/sqltt/badge.svg?style=flat-square)](https://snyk.io/test/npm/sqltt)
+
+----------------------------------------------------
+
 
 *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
 Javascript Projects taking advantadge of the [ES6+ Tagged
@@ -322,6 +328,9 @@ FEATURES
 --------
 
 <!-- {{{ -->
+  * Very simple, readable and non-intrusive [template
+    format](#template-format).
+
   * Don't Repeat Yourself (DRY):
     - Render SQL [for your application](#from-application) properly
       formatted for one or more database engines. Ex.:
@@ -335,9 +344,6 @@ FEATURES
       - Or even simpler: Direct [call from command line](#executing-from-cli)
         if ['.publish()' method used](#publishmodule-tpl).
     - ...all with **single SQL template source**.
-
-  * Very simple, readable and non-intrusive [template
-    format](#template-format).
 
   * Easy placeholders hanling:
     - Readable strings as argument placeholders instead of ``$1``, ``$2``,
