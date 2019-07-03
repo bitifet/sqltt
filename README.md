@@ -18,6 +18,7 @@ feature.
 | [Template Syntax](#template-example)                   | [Features](#features)               | [ABOUT](#about-sqltt)         |
 | [Usage as CLI Tool](#executing-from-cli)               | [Template Format](#template-format) | [TODO](#todo)                 |
 | [Usage as Node Module](#using-from-nodejs-application) | [API Reference](#api-reference)     | [Contributing](#contributing) |
+| [Usage from non js languages](using-from-non-javascript-languages) | [Static Methods](#static-methods) | [Advanced Features](#advanced-features) |
 
 
 Examples
@@ -148,7 +149,7 @@ command line arguments:
 <!-- }}} -->
 
 
-### Using from NodeJS application:
+### Using from NodeJS application
 
 <!-- {{{ -->
 
@@ -226,6 +227,52 @@ methods and their options.
 <!-- }}} -->
 
 
+### Using from non javascript languages
+
+Athough they're javascript, we can take advantadge of *SQLTT* templates even
+for other language programs.
+
+Despite they won't be able directly use [Template API](#template-api) methods
+such as [args()](#argsargdata), we are still able to use *SQLTT* templates to
+keep our queries readable and easy to mantain.
+
+To use them from our non-javascript application, all we need to do is to
+compile them using [SQLTT CLI capabilities](#executing-from-cli) with [*_nocli*
+engines](#query-output-inspection):
+
+
+**$ ``SQLTT_ENGINE=postgresql_nocli node personnel.sql.js listByDept oper``**
+
+```sql
+    select id, dptId, dptName, name, sex
+    from personnel
+    join depts using(dptId)
+    where dptId = $1
+```
+
+This way we can build simple simple *compilation scripts* such as following
+example:
+
+```sh
+#!/bin/env sh
+export SQLTT_ENGINE=postgresql_nocli
+
+node sqlsrc/personnel.sql.js list > sql/personnel.list.sql
+node sqlsrc/personnel.sql.js listByDept > sql/personnel.listByDept.sql
+node sqlsrc/personnel.sql.js show > sql/personnel.show.sql
+node sqlsrc/personnel.sql.js insert > sql/personnel.insert.sql
+node sqlsrc/personnel.sql.js update > sql/personnel.update.sql
+
+node sqlsrc/articles.sql.js list > sql/articles.list.sql
+node sqlsrc/articles.sql.js find > sql/articles.find.sql
+node sqlsrc/articles.sql.js show > sql/articles.show.sql
+node sqlsrc/articles.sql.js insert > sql/articles.insert.sql
+node sqlsrc/articles.sql.js update > sql/articles.update.sql
+
+# ....
+```
+
+
 USAGE MANUAL
 ============
 
@@ -237,53 +284,53 @@ Table of Contents
 * [ABOUT SQLTT](#about-sqltt)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
-    * [Engines](#engines)
-        * [Currently supported engines](#currently-supported-engines)
-    * [Engine Flavours and Targets](#engine-flavours-and-targets)
-        * [SQLTT_ENGINE environment variable](#sqltt_engine-environment-variable)
+	* [Engines](#engines)
+		* [Currently supported engines](#currently-supported-engines)
+	* [Engine Flavours and Targets](#engine-flavours-and-targets)
+		* [SQLTT_ENGINE environment variable](#sqltt_engine-environment-variable)
 * [SETUP AND USAGE](#setup-and-usage)
-    * [Package setup](#package-setup)
-    * [Writing templates](#writing-templates)
-    * [Usage](#usage)
-        * [From application](#from-application)
-        * [From CLI](#from-cli)
-            * [Providing arguments](#providing-arguments)
-            * [Executing queries](#executing-queries)
-            * [Selecting Engine Flavour](#selecting-engine-flavour)
-            * [Query output inspection](#query-output-inspection)
+	* [Package setup](#package-setup)
+	* [Writing templates](#writing-templates)
+	* [Usage](#usage)
+		* [From application](#from-application)
+		* [From CLI](#from-cli)
+			* [Providing arguments](#providing-arguments)
+			* [Executing queries](#executing-queries)
+			* [Selecting Engine Flavour](#selecting-engine-flavour)
+			* [Query output inspection](#query-output-inspection)
 * [TEMPLATE FORMAT](#template-format)
-    * [SQL Callback](#sql-callback)
+	* [SQL Callback](#sql-callback)
 * [API REFERENCE](#api-reference)
-    * [Template API](#template-api)
-        * [sql(engFlavour)](#sqlengflavour)
-        * [args(argData)](#argsargdata)
-        * [concat(str)](#concatstr)
-        * [options(optsObject)](#optionsoptsobject)
-    * [Tag API](#tag-api)
-        * [arg(argName, alias)](#argargname-alias)
-        * [include(src [, bindings])](#includesrc-bindings)
-        * [keys(), values() and entries()](#keys-values-and-entries)
-        * [literal(str)](#literalstr)
-    * [Static Methods](#static-methods)
-        * [publish(module, tpl)](#publishmodule-tpl)
+	* [Template API](#template-api)
+		* [sql(engFlavour)](#sqlengflavour)
+		* [args(argData)](#argsargdata)
+		* [concat(str)](#concatstr)
+		* [options(optsObject)](#optionsoptsobject)
+	* [Tag API](#tag-api)
+		* [arg(argName, alias)](#argargname-alias)
+		* [include(src [, bindings])](#includesrc-bindings)
+		* [keys(), values() and entries()](#keys-values-and-entries)
+		* [literal(str)](#literalstr)
+	* [Static Methods](#static-methods)
+		* [publish(module, tpl)](#publishmodule-tpl)
 * [OUTDATED:](#outdated)
-    * [Single-query template files:](#single-query-template-files)
-    * [Mulitple-query template files:](#mulitple-query-template-files)
-        * [*template* parts:](#template-parts)
-        * [Valid *options*:](#valid-options)
-    * [Usage Examples](#usage-examples)
-        * [From NodeJS application:](#from-nodejs-application)
-        * [From console](#from-console)
-    * [Template Examples](#template-examples)
-        * [Simple template file](#simple-template-file)
-        * [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
-        * [Full example with nested templates](#full-example-with-nested-templates)
-    * [Supported Database Engines](#supported-database-engines)
-        * [Adding more Database Engines](#adding-more-database-engines)
-    * [Advanced Features](#advanced-features)
-        * [Hooks](#hooks)
-        * [SQL Alternatives](#sql-alternatives)
-        * [String Concatenation](#string-concatenation)
+	* [Single-query template files:](#single-query-template-files)
+	* [Mulitple-query template files:](#mulitple-query-template-files)
+		* [*template* parts:](#template-parts)
+		* [Valid *options*:](#valid-options)
+	* [Usage Examples](#usage-examples)
+		* [From NodeJS application:](#from-nodejs-application)
+		* [From console](#from-console)
+	* [Template Examples](#template-examples)
+		* [Simple template file](#simple-template-file)
+		* [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
+		* [Full example with nested templates](#full-example-with-nested-templates)
+	* [Supported Database Engines](#supported-database-engines)
+		* [Adding more Database Engines](#adding-more-database-engines)
+	* [Advanced Features](#advanced-features)
+		* [Hooks](#hooks)
+		* [SQL Alternatives](#sql-alternatives)
+		* [String Concatenation](#string-concatenation)
 * [TODO](#todo)
 * [Contributing](#contributing)
 
@@ -300,7 +347,7 @@ and nuances.
 
 Even for the same database engine, the syntax used in application libraries and
 [CLI](https://en.wikipedia.org/wiki/Command-line_interface#Other_command-line_interfaces)
-interpreters usually differs. At least for parametyzed queries.
+interpreters usually differ. At least for parametyzed queries.
 
 This often forces developers to modify their queries back and forth to test
 them in database CLI or, even worst, when they need to support different
@@ -310,7 +357,7 @@ completely different versions of the same query for each supported database.
 ORM solutions solve that problem at the cost of generating suboptimal queries
 and disallowing most powerful SQL and/or database-specific features.
 
-SQLTT allow us to maintain single version of each query while preserving the
+SQLTT allows us to maintain single version of each query while preserving the
 whole power of actual SQL also providing many advanced features such as reusing
 snipppets or whole queries and [much more](#features) fully embracing the
 [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle.
