@@ -1,5 +1,6 @@
 const assert = require('assert');
 const sqltt = require('../');
+const re_whitespace = /[\s\n\r]+/gm;
 
 // TO-DO list
 // ==========
@@ -15,15 +16,30 @@ const sqltt = require('../');
 // Helpers
 // =======
 
-function hsql(src, engine) { // Tpl to SQL{{{
+
+const supported_engines = [
+    'default', 'cli',
+    'postgresql', 'postgresql_cli',
+    'oracle', 'oracle_cli',
+];
+
+function h_sql(src, engine, args) { // Tpl to SQL{{{
     const q = new sqltt(src);
-    return q.sql(engine);
+    return q.sql(engine, args)
+        .replace(re_whitespace, ' ')
+        .trim()
+    ;
 };//}}}
-function hargl(src) { // Tpl to arguments list{{{
+function h_sqle(src, args) {//{{{
+    return supported_engines
+        .map(e=>e.toUpperCase()+": "+h_sql(src, e, args))
+    ;
+};//}}}
+function h_arglist(src) { // Tpl to arguments list{{{
     const q = new sqltt(src);
     return q.argList;
 };//}}}
-function hargs(src, args) { // Tpl, argsObj to argsArr{{{
+function h_args(src, args) { // Tpl, argsObj to argsArr{{{
     const q = new sqltt(src);
     return q.args(args);
 };//}}}
@@ -31,58 +47,114 @@ function hargs(src, args) { // Tpl, argsObj to argsArr{{{
 
 describe('sqltt class', function() {
 
-    describe("Basic testing", function() {//{{{
-        it ('Should have .getSource()', function() {
-            var q;
+    const s0 = $=>$`
+        select ${$.arg("foo")}, ${"bar"}, ${"baz"}
+    `;
 
-            assert.doesNotThrow(function(){
-                q = new sqltt("foobar");
-            }, "Does not accept simple string as template");
-            assert.equal(typeof q.getSource, "function");
-        });
+    describe("Basic testing", function() {//{{{
+
+        it ('Contrructs well', function() {//{{{
+            assert.doesNotThrow(function() {
+                new sqltt (s0);
+            });
+        });//}}}
+
+        it ('Should have .getSource()', function() {//{{{
+            assert.equal(typeof (new sqltt(s0)).getSource, "function");
+        });//}}}
+
     });//}}}
 
-    describe('"Tag" methods', function() {
 
-        it ('Acceptable template formats', function() {//{{{
-            var q;
+    describe("Supported DB Engines", function() {//{{{
 
-            assert.doesNotThrow(function() {
-                q = new sqltt (
-                    $=>$`
-                        select ${$.arg("foo")}, ${"bar"}, ${"baz"}
-                    `
-                );
-            });
+        it ('Default', function() {//{{{
+            assert.equal(
+                h_sql(s0)
+                , "select $1, $2, $3" // TODO: Move to ANSI SQL
+            );
+            assert.equal(
+                h_sql(s0, "cli")
+                , "\\set foo '''''' \\set bar '''''' \\set baz '''''' select :foo, :bar, :baz"
+                    // TODO: Move to ANSI SQL
+            );
+        });//}}}
 
+        it ('PostgreSQL', function() {//{{{
 
-            assert.equal("select $1, $2, $3", q.sql().trim());
-            assert.equal("select $1, $2, $3", q.sql("postgresql").trim());
-            assert.equal("select :1, :2, :3", q.sql("oracle").trim());
+            assert.equal(
+                h_sql(s0, "postgresql")
+                , "select $1, $2, $3"
+            );
+            assert.equal(
+                h_sql(s0, "postgresql_cli")
+                , "\\set foo '''''' \\set bar '''''' \\set baz '''''' select :foo, :bar, :baz"
+            );
 
         });//}}}
+
+        it ('Oracle', function() {//{{{
+
+            assert.equal(
+                h_sql(s0, "oracle")
+                , "select :1, :2, :3"
+            );
+
+            assert.equal(
+                h_sql(s0, "oracle_cli")
+                , "define foo = '' define bar = '' define baz = '' select '&foo', '&bar', '&baz' ;"
+            );
+        });//}}}
+
+    });//}}}
+
+
+
+    describe('Template API', function() {
+
+    });
+
+    describe('Tag API', function() {
+
+        it ('.arg()', function() {
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${"foo"} f`, ['afoo'])
+                , [
+                    "DEFAULT: s $1 f",
+                    "CLI: \\set foo '''afoo'''s :foo f",
+                    "POSTGRESQL: s $1 f",
+                    "POSTGRESQL_CLI: \\set foo '''afoo'''s :foo f",
+                    "ORACLE: s :1 f",
+                    "ORACLE_CLI: define foo = 'afoo's '&foo' f;",
+                ]
+            );
+        });
+
+    });
+
+    describe('Other tests...', function() {
 
         it ('Arguments interpolation methods', function() {//{{{
 
             const q = $=>$`s ${"foo"}, ${$.arg("bar")}, ${$.arg(["baz1", "baz2"])}, ${["baz3", "baz4"]} f`;
             assert.equal(
-                hsql(q)
+                h_sql(q)
                 , "s $1, $2, $3, $4, $5, $6 f"
             );
             assert.equal(
-                hsql(q, "postgresql")
+                h_sql(q, "postgresql")
                 , "s $1, $2, $3, $4, $5, $6 f"
             );
             assert.equal(
-                hsql(q, "oracle")
+                h_sql(q, "oracle")
                 , "s :1, :2, :3, :4, :5, :6 f"
             );
             assert.deepStrictEqual(
-                hargl(q)
+                h_arglist(q)
                 ,  ["foo", "bar", "baz1", "baz2", "baz3", "baz4"]
             );
             assert.deepStrictEqual(
-                hargs(q, {foo: "fooArg", baz1: "baz1Arg"})
+                h_args(q, {foo: "fooArg", baz1: "baz1Arg"})
                 ,  ["fooArg", null, "baz1Arg", null, null, null]
                 , "Argument list should be generated in right order"
             );
@@ -98,12 +170,12 @@ describe('sqltt class', function() {
             };
 
             assert.deepStrictEqual(
-                hargl(q)
+                h_arglist(q)
                 ,  ["baz2", "bar", "foo", "baz1"]
                 , "Specified arguments order must be respected"
             )
             assert.deepStrictEqual(
-                hargs(q, {foo: "fooArg", baz1: "baz1Arg"})
+                h_args(q, {foo: "fooArg", baz1: "baz1Arg"})
                 ,  [null, null, "fooArg", "baz1Arg"]
                 , "Argument list should be generated in right order"
             )
@@ -113,8 +185,8 @@ describe('sqltt class', function() {
         it ('Literals interpolation method', function() {//{{{
 
             const q = $=>$`s ${$.literal("foo")}, ${$.literal(["bar", "baz1"])}, ${[$.literal("baz2"), $.literal("baz3")]} f`;
-            assert.equal(
-                hsql(q)
+            assert.deepStrictEqual(
+                h_sql(q)
                 , "s foo, bar, baz1, baz2, baz3 f"
             );
 
@@ -129,30 +201,30 @@ describe('sqltt class', function() {
 
             // q1:
             assert.equal(
-                hsql(q1)
+                h_sql(q1)
                 , "s (s $1, 'fixed_value' f) as subq1 f"
             );
             // q2:
             assert.equal(
-                hsql(q2)
+                h_sql(q2)
                 , "s (s $1, 'fixed_value' f) as subq1, (s $2, $3 f) as subq2 f"
             );
             assert.equal(
-                hsql(q2, "oracle")
+                h_sql(q2, "oracle")
                 , "s (s :1, 'fixed_value' f) subq1, (s :2, :3 f) subq2 f"
             );
             // q3:
             assert.equal(
-                hsql(q3)
+                h_sql(q3)
                 , "s * f s (s $1, 'fixed_value' f) as subq1 f as supernest"
             );
 
             assert.deepStrictEqual(
-                hargl(q2)
+                h_arglist(q2)
                 ,  ["i1a1", "i2a1", "i2a2"]
             );
             assert.deepStrictEqual(
-                hargs(q2, {i1a2: "IwontAppear", i2a2: "second"})
+                h_args(q2, {i1a2: "IwontAppear", i2a2: "second"})
                 ,  [null, null, "second"]
                 , "Argument list should be generated in right order"
             );

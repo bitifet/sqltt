@@ -13,12 +13,12 @@ Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Tem
 feature.
 
 
-| 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                |
-|--------------------------------------------------------|-------------------------------------|-------------------------------|
-| [Template Syntax](#template-example)                   | [Features](#features)               | [ABOUT](#about-sqltt)         |
-| [Usage as CLI Tool](#executing-from-cli)               | [Template Format](#template-format) | [TODO](#todo)                 |
-| [Usage as Node Module](#using-from-nodejs-application) | [API Reference](#api-reference)     | [Contributing](#contributing) |
-| [Usage from non js languages](using-from-non-javascript-languages) | [Static Methods](#static-methods) | [Advanced Features](#advanced-features) |
+| 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                          |
+|--------------------------------------------------------|-------------------------------------|-----------------------------------------|
+| [Template Syntax](#template-example)                   | [Features](#features)               | [ABOUT](#about-sqltt)                   |
+| [Usage as CLI Tool](#executing-from-cli)               | [Template Format](#template-format) | [Advanced Features](#advanced-features) |
+| [Usage as Node Module](#using-from-nodejs-application) | [API Reference](#api-reference)     | [TODO](#todo)                           |
+| [Usage from non js languages](using-from-non-javascript-languages) | [Static Methods](#static-methods) | [Contributing](#contributing) |
 
 
 Examples
