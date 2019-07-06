@@ -139,7 +139,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     if (! (q instanceof sqltt)) throw "Not a sqltt instance.";
                     return [
                         eng.argWrapper.bind(q)(args),
-                        q.sql('cli', args),
+                        q.sql('cli'),
                     ].join("\n");
                 })
                 .join("\n;\n")
@@ -169,13 +169,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
         return src;
     };//}}}
-    sqltt.prototype.sql = function sql(engName, cliArgs = []) {//{{{
+    sqltt.prototype.sql = function sql(engName) {//{{{
         const me = this;
         const eng = resolveEngine(me, engName);
         if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
         const qtpl = me.getSource(eng.flavour).sql;
 
-        const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)), cliArgs);
+        const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)));
         me.sqlCache[eng.name] = outSql;
         return outSql.replace(re_rowtrim, "");
     };//}}}

@@ -321,7 +321,6 @@ Table of Contents
 * [Contributing](#contributing)
 * [OUTDATED:](#outdated)
     * [Single-query template files:](#single-query-template-files)
-    * [Mulitple-query template files:](#mulitple-query-template-files)
         * [*template* parts:](#template-parts)
         * [Valid *options*:](#valid-options)
     * [Usage Examples](#usage-examples)
@@ -577,9 +576,13 @@ almost equivalent to:
 ```javascript
 module.exports = tpl;                      // Exports template.
 module.parent || console.log(              // Allow CLI usage.
-    tpl.sql('cli', process.argv.slice(2))  // Passing shell arguments.
+    tpl.sql('cli')
 );
 ```
+
+...except for that it also renders properly formattend "set/define" (depending
+on database engine) arguments form commandline arguments.
+
 
 > 👉 In fact it's slightly more complicated in order to properly handle
 > multiple-template files too as well as other slight nuances.
@@ -1181,51 +1184,6 @@ $ SQL_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
 $ SQL_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
 ```
 
-### Mulitple-query template files:
-
-For small queries, sometimes it turns out being more practical gathering them
-together into single file exported as *key* ➡ *value* object.
-
-We can achieve this with minimal changes to the previous pattern:
-
-```javascript
-const sqltt = require("sqltt");          // Require sqltt
-const q = {                              // Define multiple named queries.
-    list: new sqltt(listQueryTemplate, options),
-    get:  new sqltt(getQueryTemplate, options),
-    insert:  new sqltt(insertQueryTemplate, options),
-    update:  new sqltt(updateQueryTemplate, options),
-    /* ... */
-}
-module.exports = q;                      // Exports it.
-if (! module.parent) {
-    const args = process.argv.slice(2);  // Get shell arguments.
-    const qId = args.shift()             // Extract first as query id.
-    console.log (qId
-        ?  q[qId].sql('cli', args)       // Render query if selected
-        : "Available queries: " + Object.keys(q).join(", ")
-    );  // ...and provide available queries list if no argument provided.
-};
-```
-
-**Usage Examples:**
-
-  * From application:
-
-```javascript
-const myQueryRepo = require('path/to/my/sqltt_tpl_repo.sql.js');
-const sql = myQueryRepo.someQuery.sql('postgresql');
-const args = myQueryRepo.someOtherQuery.args({ /*...*/ });
-```
-
-  * From command line:
-
-```sh
-# The only difference here is that we reserve the first argument to select
-# targetted query.
-$ node myQuery.sql.js someQuery arg1 arg2 "argument 3"
-```
-
 
 #### *template* parts:
 
@@ -1322,11 +1280,7 @@ const q = new sqltt({
     `, /* @@/sql@@ */
 });
 
-// Exports query to be used as library:
-module.exports = q;
-
-// When directly invoked, output propper cli version to stdout:
-module.parent || console.log(q.sql('cli', process.argv.slice(2)));
+sqltt.publish(module, q);
 ```
 
 > 📌 ``/* @@sql@@ */`` and ``/* @@/sql@@ */`` comments are optional (and, for
@@ -1379,8 +1333,7 @@ const q = new sqltt({
         ) as loggeableUsers
     `,
 });
-module.exports = q;
-module.parent || console.log(q.sql('cli', process.argv.slice(2)));
+sqltt.publish(module, q);
 ```
 
 > 📌 It does not matter if nested templates are already instantiated (like
