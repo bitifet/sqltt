@@ -117,8 +117,9 @@ describe('sqltt class', function() {
     describe('Tag API', function() {
 
         it ('.arg()', function() {
+
             assert.deepStrictEqual(
-                h_sqle($=>$`s ${"foo"} f`, ['afoo'])
+                h_sqle($=>$`s ${$.arg("foo")} f`, ['afoo'])
                 , [
                     "DEFAULT: s $1 f",
                     "CLI: s :foo f",
@@ -127,7 +128,44 @@ describe('sqltt class', function() {
                     "ORACLE: s :1 f",
                     "ORACLE_CLI: s '&foo' f;",
                 ]
+                , "Simple case"
             );
+
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${"foo"} f`, ['afoo'])
+                , h_sqle($=>$`s ${$.arg("foo")} f`, ['afoo'])
+                , "Shorthand"
+            );
+
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${$.arg("foo", "fooAlias")} f`, ['afoo'])
+                , [
+                    "DEFAULT: s $1 fooAlias f",
+                    "CLI: s :foo fooAlias f",
+                    "POSTGRESQL: s $1 fooAlias f",
+                    "POSTGRESQL_CLI: s :foo fooAlias f",
+                    "ORACLE: s :1 fooAlias f",
+                    "ORACLE_CLI: s '&foo' fooAlias f;",
+                ]
+                , "Aliased"
+            );
+
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${$.arg({foo: "fooAlias", bar: "barAlias"})} f`, ['afoo', 'abar'])
+                , [
+                    "DEFAULT: s $1 fooAlias, $2 barAlias f",
+                    "CLI: s :foo fooAlias, :bar barAlias f",
+                    "POSTGRESQL: s $1 fooAlias, $2 barAlias f",
+                    "POSTGRESQL_CLI: s :foo fooAlias, :bar barAlias f",
+                    "ORACLE: s :1 fooAlias, :2 barAlias f",
+                    "ORACLE_CLI: s '&foo' fooAlias, '&bar' barAlias f;",
+                ]
+                , "Object enhnanced"
+            );
+
+
+
+
         });
 
     });
