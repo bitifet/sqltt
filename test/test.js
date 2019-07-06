@@ -75,7 +75,7 @@ describe('sqltt class', function() {
             );
             assert.equal(
                 h_sql(s0, "cli")
-                , "\\set foo '''''' \\set bar '''''' \\set baz '''''' select :foo, :bar, :baz"
+                , "select :foo, :bar, :baz"
                     // TODO: Move to ANSI SQL
             );
         });//}}}
@@ -88,7 +88,7 @@ describe('sqltt class', function() {
             );
             assert.equal(
                 h_sql(s0, "postgresql_cli")
-                , "\\set foo '''''' \\set bar '''''' \\set baz '''''' select :foo, :bar, :baz"
+                , "select :foo, :bar, :baz"
             );
 
         });//}}}
@@ -102,7 +102,7 @@ describe('sqltt class', function() {
 
             assert.equal(
                 h_sql(s0, "oracle_cli")
-                , "define foo = '' define bar = '' define baz = '' select '&foo', '&bar', '&baz' ;"
+                , "select '&foo', '&bar', '&baz' ;"
             );
         });//}}}
 
@@ -121,11 +121,11 @@ describe('sqltt class', function() {
                 h_sqle($=>$`s ${"foo"} f`, ['afoo'])
                 , [
                     "DEFAULT: s $1 f",
-                    "CLI: \\set foo '''afoo'''s :foo f",
+                    "CLI: s :foo f",
                     "POSTGRESQL: s $1 f",
-                    "POSTGRESQL_CLI: \\set foo '''afoo'''s :foo f",
+                    "POSTGRESQL_CLI: s :foo f",
                     "ORACLE: s :1 f",
-                    "ORACLE_CLI: define foo = 'afoo's '&foo' f;",
+                    "ORACLE_CLI: s '&foo' f;",
                 ]
             );
         });
@@ -137,6 +137,7 @@ describe('sqltt class', function() {
         it ('Arguments interpolation methods', function() {//{{{
 
             const q = $=>$`s ${"foo"}, ${$.arg("bar")}, ${$.arg(["baz1", "baz2"])}, ${["baz3", "baz4"]} f`;
+
             assert.equal(
                 h_sql(q)
                 , "s $1, $2, $3, $4, $5, $6 f"
@@ -153,6 +154,7 @@ describe('sqltt class', function() {
                 h_arglist(q)
                 ,  ["foo", "bar", "baz1", "baz2", "baz3", "baz4"]
             );
+
             assert.deepStrictEqual(
                 h_args(q, {foo: "fooArg", baz1: "baz1Arg"})
                 ,  ["fooArg", null, "baz1Arg", null, null, null]

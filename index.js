@@ -31,7 +31,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             engName,
             envDefault,
         ] = [
-            me[$options$].default_engine,
+            ((me || {})[$options$] || {}).default_engine,
             engName0,
             process.env[ENGINE_ENV_VAR],
         ]
@@ -127,7 +127,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
         return src;
     };//}}}
-    function logQuery(qSrc, args) {// CLI output helper {{{
+    function logQuery(qSrc, args, eng) {// CLI output helper {{{
         // Accept single query template or Array
         let qList = qSrc instanceof Array
             ? qSrc
@@ -137,7 +137,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             qList
                 .map(function(q) {
                     if (! (q instanceof sqltt)) throw "Not a sqltt instance.";
-                    return q.sql('cli', args);
+                    return [
+                        eng.argWrapper.bind(q)(args),
+                        q.sql('cli', args),
+                    ].join("\n");
                 })
                 .join("\n;\n")
         );
@@ -172,7 +175,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
         const qtpl = me.getSource(eng.flavour).sql;
 
-        const outSql = eng.wrapper.bind(me)(qtpl(new sqlCompiler(me, eng)), cliArgs);
+        const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)), cliArgs);
         me.sqlCache[eng.name] = outSql;
         return outSql.replace(re_rowtrim, "");
     };//}}}
@@ -227,9 +230,12 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         // CLI usage:
         if (! module.parent) {
+
+            const eng = resolveEngine(null, 'cli');
             const args = process.argv.slice(2); // Get shell arguments.
+
             if (qSrc instanceof sqltt) {
-                logQuery(qSrc, args);
+                logQuery(qSrc, args, eng);
             } else {
                 const qId = args.shift()        // Extract first as query id.
                 if ( // Unexistent query or unspecified.{{{
@@ -255,7 +261,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                 }//}}}
                 else
                 { // Render selected query:{{{
-                    logQuery(qSrc[qId], args);
+                    logQuery(qSrc[qId], args, eng);
                 };//}}}
             };
         };
