@@ -313,6 +313,12 @@ Table of Contents
         * [literal(str)](#literalstr)
     * [Static Methods](#static-methods)
         * [publish(module, tpl)](#publishmodule-tpl)
+* [Advanced Features](#advanced-features)
+    * [Hooks](#hooks)
+    * [SQL Alternatives](#sql-alternatives)
+    * [String Concatenation](#string-concatenation)
+* [TODO](#todo)
+* [Contributing](#contributing)
 * [OUTDATED:](#outdated)
     * [Single-query template files:](#single-query-template-files)
     * [Mulitple-query template files:](#mulitple-query-template-files)
@@ -327,12 +333,6 @@ Table of Contents
         * [Full example with nested templates](#full-example-with-nested-templates)
     * [Supported Database Engines](#supported-database-engines)
         * [Adding more Database Engines](#adding-more-database-engines)
-    * [Advanced Features](#advanced-features)
-        * [Hooks](#hooks)
-        * [SQL Alternatives](#sql-alternatives)
-        * [String Concatenation](#string-concatenation)
-* [TODO](#todo)
-* [Contributing](#contributing)
 
 <!-- vim-markdown-toc -->
 
@@ -990,6 +990,145 @@ tpl.getUserData = new sqltt($ => ({
       - Ex.: ``node myTplLib.sql listBySection sectionId``
 
 
+Advanced Features
+-----------------
+
+### Hooks
+
+Hooks lets us to wrap arguments differently according to the actual engine.
+
+They consist on a function that takes the original string and the engine name.
+If this function returns a non falsy value, the argument is replaced by that in
+the query. Otherwise it remains untouched.
+
+> 📌 Hooks can also be applied to non argument keywords. To do so we need
+> interpolate them using [literal() tag method](#literalstr).
+
+
+to escape them as if it were real arguments and then wrap it as an array. This
+will avoid its interpolation as argument.
+>
+
+**Example:**
+
+```javascript
+tpl.getUserData = new sqltt({
+    hooks: {
+        // Prettier formatting on CLI output:
+        user_profile: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
+        // Rename "bigint" cast to 
+        bigint: (arg, eng) => eng.match(/^oracle/) && "int",
+    },
+    sql: $=>$`
+        select id, name, ${$.literal("user_profile")}
+        from users
+        where cast(strCtime as ${$.literal("bigint")}) > ${"fromTimestamp"}
+    `,
+});
+```
+
+There's a shorthand consisting in to simply specify an alternative string. In
+this case the replacement would be done inconditionally. But this could be
+helpful in case we want to manually enable/disable some tweaks without editing
+the actual SQL (just commenting in and out that hook).
+
+**Example:**
+
+```javascript
+        // If we wanted to apply this hook to all engines:
+        json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
+        // We could have written it as:
+        json_data: "jsonb_pretty(%) as %",
+
+```
+
+
+### SQL Alternatives
+
+If it is impossible or unreasonable to use the same sql structure for some
+database engines, *sqltt* allows to specify a completely different sql source
+for given database through *altsql* property.
+
+**Example:**
+
+```javascript
+tpl.someQuery = new sqltt({
+    sql: $=>$`
+        /* Regular SQL */
+    `,
+    altsql: {
+        oracle: $=>$`
+            /* Oracle specific SQL */
+        `
+    }
+});
+```
+
+> 📌 Argument names and order are checked to be the same in all query
+> alternatives to ensure its consistency so using *args* property to fix their
+> order is hardly encouraged.
+
+
+### String Concatenation
+
+*sqltt* template instances provide a ``.concat(<string>)`` method returning a new
+instance whose ``sql(<whatever>)`` method will return provided string
+concatenated at the end.
+
+This is useful to add simple clauses such as ``limit``, ``order by`` or ``group by``
+from our application logic.
+
+**Example:**
+
+```javascript
+const myQuery = require('path/to/myQuery.sql.js')
+    .concat("limit 100")
+;
+db.queryRows(
+    myQuery.sql("postgresql")
+    , myQuery.args(inputData) // or simply "inputData" if db is sqltt aware*
+        // (*) Such as ppooled-pg
+).then(rows=>console.log(rows);
+```
+
+
+
+TODO
+----
+
+  * Implement Custom Engines:
+    - Engines are really simple libraries very easy to implement. But nowadays
+      they must be included in SQLTT package.
+    - Custom engines will allow users to implement their own engines extending
+      default ones just passing them as a specific option.
+
+  * Implement customisation opitons:
+    - Smart indentation.
+    - Comments Removal.
+
+  * Incorporate Oracle comptibility Shims
+
+
+Contributing
+------------
+
+If you are interested in contributing with this project, you can do it in many ways:
+
+  * Creating and/or mantainig documentation.
+
+  * Implementing new features or improving code implementation.
+
+  * Reporting bugs and/or fixing it.
+
+  * Sending me any other feedback.
+
+  * Whatever you like...
+
+Please, contact-me, open issues or send pull-requests thought [this project GIT repository](https://github.com/bitifet/sqltt)
+
+
+
+
 
 OUTDATED:
 ---------
@@ -1266,143 +1405,4 @@ If you are interested in adding more engines or improving existing ones, check
 ``lib/engines.js`` file (They're too easy to implement) and please, feel free to
 send me patches to include your improvements.
 
-
-### Advanced Features
-
-#### Hooks
-
-Hooks lets us to wrap arguments differently according to the actual engine.
-
-They consist on a function that takes the original string and the engine name.
-If this function returns a non falsy value, the argument is replaced by that in
-the query. Otherwise it remains untouched.
-
-> 📌 Hooks can also be applied to non argument keywords. To do so we need
-> interpolate them using [literal() tag method](#literalstr).
-
-
-to escape them as if it were real arguments and then wrap it as an array. This
-will avoid its interpolation as argument.
->
-
-**Example:**
-
-```javascript
-const sqltt = require("sqltt");
-const q = new sqltt({
-    hooks: {
-        // Prettier formatting on CLI output:
-        user_profile: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
-        // Rename "bigint" cast to 
-        bigint: (arg, eng) => eng.match(/^oracle/) && "int",
-    },
-    sql: $=>$`
-        select id, name, ${$.literal("user_profile")}
-        from users
-        where cast(strCtime as ${$.literal("bigint")}) > ${"fromTimestamp"}
-    `,
-});
-sqltt.publish(module, tpl);
-```
-
-There's a shorthand consisting in to simply specify an alternative string. In
-this case the replacement would be done inconditionally. But this could be
-helpful in case we want to manually enable/disable some tweaks without editing
-the actual SQL (just commenting in and out that hook).
-
-**Example:**
-
-```javascript
-        // If we wanted to apply this hook to all engines:
-        json_data: (arg, eng) => eng.match(/(^|_)cli$/) && "jsonb_pretty("+arg+") as "+arg,
-        // We could have written it as:
-        json_data: "jsonb_pretty(%) as %",
-
-```
-
-
-#### SQL Alternatives
-
-If it is impossible or unreasonable to use the same sql structure for some
-database engines, *sqltt* allows to specify a completely different sql source
-for given database through *altsql* property.
-
-**Example:**
-
-```javascript
-const sqltt = require("sqltt");
-const q = new sqltt({
-    sql: $=>$`
-        /* Regular SQL */
-    `,
-    altsql: {
-        $=>$`
-            /* Oracle specific SQL */
-        `
-    }
-});
-sqltt.publish(module, tpl);
-```
-
-> 📌 Argument names and order are checked to be the same in all query
-> alternatives to ensure its consistency so using *args* property to fix their
-> order is hardly encouraged.
-
-
-#### String Concatenation
-
-*sqltt* template instances provide a ``.concat(<string>)`` method returning a new
-instance whose ``sql(<whatever>)`` method will return provided string
-concatenated at the end.
-
-This is useful to add simple clauses such as ``limit``, ``order by`` or ``group by``
-from our application logic.
-
-**Example:**
-
-```javascript
-const myQuery = require('path/to/myQuery.sql.js')
-    .concat("limit 100")
-;
-db.queryRows(
-    myQuery.sql("postgresql")
-    , myQuery.args(inputData) // or simply "inputData" if db is sqltt aware*
-        // (*) Such as ppooled-pg
-).then(rows=>console.log(rows);
-```
-
-
-
-TODO
-----
-
-  * Implement Custom Engines:
-    - Engines are really simple libraries very easy to implement. But nowadays
-      they must be included in SQLTT package.
-    - Custom engines will allow users to implement their own engines extending
-      default ones just passing them as a specific option.
-
-  * Implement customisation opitons:
-    - Smart indentation.
-    - Comments Removal.
-
-  * Incorporate Oracle comptibility Shims
-
-
-Contributing
-------------
-
-If you are interested in contributing with this project, you can do it in many ways:
-
-  * Creating and/or mantainig documentation.
-
-  * Implementing new features or improving code implementation.
-
-  * Reporting bugs and/or fixing it.
-
-  * Sending me any other feedback.
-
-  * Whatever you like...
-
-Please, contact-me, open issues or send pull-requests thought [this project GIT repository](https://github.com/bitifet/sqltt)
 
