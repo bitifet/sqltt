@@ -300,6 +300,10 @@ Table of Contents
             * [Query output inspection](#query-output-inspection)
 * [TEMPLATE FORMAT](#template-format)
     * [SQL Callback](#sql-callback)
+    * [Arguments declaration](#arguments-declaration)
+    * [Alternative SQL](#alternative-sql)
+    * [Default Engine](#default-engine)
+    * [Data](#data)
 * [API REFERENCE](#api-reference)
     * [Template API](#template-api)
         * [sql(engFlavour)](#sqlengflavour)
@@ -762,6 +766,7 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
     that template. That is: the engine that will be used to render SQL when it
     is not explicitly specified in ``.sql()`` method call.
 
+  * **data:**
 
 
 **Examples:**
@@ -806,6 +811,16 @@ $=>$`
     ``${X.arg("value")}`` if ``X`` is used instead of ``$``).
 <!-- }}} -->
 
+
+### Arguments declaration
+
+### Alternative SQL
+
+### Default Engine
+
+### Data
+
+(Not yet implemented...)
 
 
 API REFERENCE
@@ -864,6 +879,11 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 #### arg(argName, alias)
 
 Provide the ability to interpolate an argument by its name.
+
+Argument names can be repeated. They will be rendered in apparition order when
+[args() Template API meghod](#argsargdata) called unless different order were
+specified through [args property](#arguments-declaration) in template source.
+
 
 **📝 Parameters:**
 
@@ -937,6 +957,29 @@ Provide the ability to nest other templates.
   * *bindings:* (Optional) Argument bindings.
 
 **🏃 Shorthand:**
+
+If *src* is an already instantiated SQLTT template and no bindings are needed,
+you don't need to use *.include()* at all.
+
+
+> **🗂️ Examples:**
+>
+> Considering this simple snippet:
+> ```javascript
+> const src0 = $=>$`select foo from bar where baz = ${"baz"}`;
+> const q0 = new sqltt(src0)
+> ```
+>
+>   * Explicit: `insert into sometable ${$.include(q0)}` ➡  `insert into
+>     sometable select foo from bar where baz = $baz`.
+>   * Using shorthand: `insert into sometable ${q0}` ➡  `insert into sometable
+>     select foo from bar where baz = $baz`.
+>   * From Source (using *.include()* required): `insert into sometable
+>     ${$.include(src0)}` ➡  `insert into sometable select foo from bar where
+>     baz = $baz`.
+
+
+**🚀 Enhnanced Behaviour:**
 
 
 **🗂️ Examples:**
