@@ -23,16 +23,16 @@ const supported_engines = [
     'oracle', 'oracle_cli',
 ];
 
-function h_sql(src, engine, args) { // Tpl to SQL{{{
+function h_sql(src, engine) { // Tpl to SQL{{{
     const q = new sqltt(src);
-    return q.sql(engine, args)
+    return q.sql(engine)
         .replace(re_whitespace, ' ')
         .trim()
     ;
 };//}}}
-function h_sqle(src, args) {//{{{
+function h_sqle(src) {//{{{
     return supported_engines
-        .map(e=>e.toUpperCase()+": "+h_sql(src, e, args))
+        .map(e=>e.toUpperCase()+": "+h_sql(src, e))
     ;
 };//}}}
 function h_arglist(src) { // Tpl to arguments list{{{
@@ -44,6 +44,7 @@ function h_args(src, args) { // Tpl, argsObj to argsArr{{{
     return q.args(args);
 };//}}}
 
+var m; // Just temporary message holder
 
 describe('sqltt class', function() {
 
@@ -118,8 +119,9 @@ describe('sqltt class', function() {
 
         it ('.arg()', function() {
 
+            m = "Simple case";//{{{
             assert.deepStrictEqual(
-                h_sqle($=>$`s ${$.arg("foo")} f`, ['afoo'])
+                h_sqle($=>$`s ${$.arg("foo")} f`)
                 , [
                     "DEFAULT: s $1 f",
                     "CLI: s :foo f",
@@ -128,17 +130,19 @@ describe('sqltt class', function() {
                     "ORACLE: s :1 f",
                     "ORACLE_CLI: s '&foo' f;",
                 ]
-                , "Simple case"
-            );
+                , m
+            );//}}}
 
+            m = "Shorthand";//{{{
             assert.deepStrictEqual(
-                h_sqle($=>$`s ${"foo"} f`, ['afoo'])
-                , h_sqle($=>$`s ${$.arg("foo")} f`, ['afoo'])
-                , "Shorthand"
-            );
+                h_sqle($=>$`s ${"foo"} f`)
+                , h_sqle($=>$`s ${$.arg("foo")} f`)
+                , m
+            );//}}}
 
+            m = "Aliased";//{{{
             assert.deepStrictEqual(
-                h_sqle($=>$`s ${$.arg("foo", "fooAlias")} f`, ['afoo'])
+                h_sqle($=>$`s ${$.arg("foo", "fooAlias")} f`)
                 , [
                     "DEFAULT: s $1 fooAlias f",
                     "CLI: s :foo fooAlias f",
@@ -147,24 +151,57 @@ describe('sqltt class', function() {
                     "ORACLE: s :1 fooAlias f",
                     "ORACLE_CLI: s '&foo' fooAlias f;",
                 ]
-                , "Aliased"
-            );
+                , m
+            );//}}}
 
+            m = "Object enhnanced";//{{{
             assert.deepStrictEqual(
-                h_sqle($=>$`s ${$.arg({foo: "fooAlias", bar: "barAlias"})} f`, ['afoo', 'abar'])
+                h_sqle($=>$`s ${$.arg({foo: "fooAlias", bar: true, baz: false})} f`)
                 , [
-                    "DEFAULT: s $1 fooAlias, $2 barAlias f",
-                    "CLI: s :foo fooAlias, :bar barAlias f",
-                    "POSTGRESQL: s $1 fooAlias, $2 barAlias f",
-                    "POSTGRESQL_CLI: s :foo fooAlias, :bar barAlias f",
-                    "ORACLE: s :1 fooAlias, :2 barAlias f",
-                    "ORACLE_CLI: s '&foo' fooAlias, '&bar' barAlias f;",
+                    "DEFAULT: s $1 fooAlias, $2 bar, $3 f",
+                    "CLI: s :foo fooAlias, :bar bar, :baz f",
+                    "POSTGRESQL: s $1 fooAlias, $2 bar, $3 f",
+                    "POSTGRESQL_CLI: s :foo fooAlias, :bar bar, :baz f",
+                    "ORACLE: s :1 fooAlias, :2 bar, :3 f",
+                    "ORACLE_CLI: s '&foo' fooAlias, '&bar' bar, '&baz' f;",
                 ]
-                , "Object enhnanced"
-            );
+                , m
+            );//}}}
 
+            m = "Array enhnanced whithout alias";//{{{
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${$.arg(["foo", "bar", "baz"])} f`)
+                , [
+                    "DEFAULT: s $1, $2, $3 f",
+                    "CLI: s :foo, :bar, :baz f",
+                    "POSTGRESQL: s $1, $2, $3 f",
+                    "POSTGRESQL_CLI: s :foo, :bar, :baz f",
+                    "ORACLE: s :1, :2, :3 f",
+                    "ORACLE_CLI: s '&foo', '&bar', '&baz' f;",
+                ]
+                , m
+            );//}}}
 
+            m = "Array enhnanced (explicitly) whithout alias";//{{{
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${$.arg(["foo", "bar", "baz"], false)} f`)
+                , h_sqle($=>$`s ${$.arg(["foo", "bar", "baz"])} f`)
+                , m
+            );//}}}
 
+            m = "Array enhnanced whith alias";//{{{
+            assert.deepStrictEqual(
+                h_sqle($=>$`s ${$.arg(["foo", "bar", "baz"], true)} f`)
+                , [
+                    "DEFAULT: s $1 foo, $2 bar, $3 baz f",
+                    "CLI: s :foo foo, :bar bar, :baz baz f",
+                    "POSTGRESQL: s $1 foo, $2 bar, $3 baz f",
+                    "POSTGRESQL_CLI: s :foo foo, :bar bar, :baz baz f",
+                    "ORACLE: s :1 foo, :2 bar, :3 baz f",
+                    "ORACLE_CLI: s '&foo' foo, '&bar' bar, '&baz' baz f;",
+                ]
+                , m
+            );//}}}
 
         });
 
