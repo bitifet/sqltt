@@ -12,11 +12,12 @@
   },
   "keywords": [
     "SQL",
+    "database",
+    "GraphQL",
     "orm",
     "string",
     "template",
     "TaggedTemplates",
-    "database",
     "DRY"
   ],
   "author": "Joan Miquel Torres <joanmi@bitifet.net>",

@@ -8,9 +8,23 @@
 
 
 *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
-Javascript Projects taking advantadge of the [ES6+ Tagged
+Javascript ([or even non Javascript](using-from-non-javascript-languages))
+Projects taking advantadge of the [ES6+ Tagged
 Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
 feature.
+
+It is not and is not meant to be an ORM: It's just a template system intended
+to keep queries readable and easy to maintain while inforcing reusability and
+helping us to keep them organized.
+
+It also let us to handle syntax mismatchings between database engines in order
+to only keep and maintain single version of each query even if it needs to be
+executed on different RDBMS.
+
+([More…](#about))
+
+> ☞ [About this prerelease…](#about-this-prerelease)
+
 
 
 | 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                          |
@@ -282,6 +296,14 @@ Table of Contents
 <!-- vim-markdown-toc GitLab -->
 
 * [ABOUT SQLTT](#about-sqltt)
+    * [About this prerelease](#about-this-prerelease)
+    * [Release TODO](#release-todo)
+        * [Implement Mutable Queries](#implement-mutable-queries)
+            * [1. Implement .data(key) Tag API method](#1-implement-datakey-tag-api-method)
+            * [2. Implement *wrapStr* additional argument](#2-implement-wrapstr-additional-argument)
+            * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
+            * [4. Enhance CLI functionality with mutations](#4-enhance-cli-functionality-with-mutations)
+            * [N. Update documentation](#n-update-documentation)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
     * [Engines](#engines)
@@ -315,6 +337,7 @@ Table of Contents
         * [include(src [, bindings])](#includesrc-bindings)
         * [keys(), values() and entries()](#keys-values-and-entries)
         * [literal(str)](#literalstr)
+        * [data(str)](#datastr)
     * [Static Methods](#static-methods)
         * [publish(module, tpl)](#publishmodule-tpl)
 * [Advanced Features](#advanced-features)
@@ -341,7 +364,6 @@ Table of Contents
 
 ABOUT SQLTT
 -----------
-
 
 <!-- {{{ -->
 
@@ -372,6 +394,146 @@ snipppets or whole queries and [much more](#features) fully embracing the
 
 
 <!-- }}} -->
+
+
+### About this prerelease
+
+I started publishing prereleases because I've decided that next SQLTT version
+will be 1.0.0 because it has so breaking changes to require increasing major
+version number.
+
+I also fixed as a goal to publish it as a mature library with a complete
+documentation and test suite.
+
+(Not really un-) fortunately, during that process, many exciting ideas such as
+(.keys(), .values() and .entries(), "nocli", enhnanced operations, etc...) came
+in to my head so I continuously postposed 1.0.0 release.
+
+Meanwhile I started to need already implemented features in a real project
+(from which in fact SQLTT comes from) so I started to publish prereleases in
+NPM.
+
+I'm working in finishing tests and documentation every time I can. But there
+still new Ideas that I think they are a "must to" because of the power they
+will conver to SQLTT as a tool.
+
+For this reason, I added this section and the following [Release
+TODO](release-todo) to track things that left to be implemented before final
+SQLTT-1.0.0
+
+I hope it won't continue growing much more and I could deliver final
+SQLTT-1.0.0 soon.
+
+
+### Release TODO
+
+#### Implement Mutable Queries
+
+##### 1. Implement .data(key) Tag API method
+
+It will give access to data declared in *data* key from template source and
+will be able to be used from other methods such as .entries() to access data
+defined inside the template.
+
+**I.e.:**
+
+```javascript
+tpl.getUserData = new sqltt({
+    data: {
+        args: ["id", "name", "sex", "birth", "ctime"],
+        fliter: ["name"],
+    },
+    sql: $=>$`
+        select ${$.arg($.data("args"))}
+        from users
+        ${$.entries($.data("filter"), "and", "where %")}
+        // For the third .entries() parameter see next TODO
+    `,
+});
+```
+
+> ...Additionally, methods that currently doesn't accept string as its first
+> argument, would be modified to automatically call .data() with it when string
+> were provided. This way, previous call to *.entries()* could be simplified as
+> ``$.entries("filter", "and", "where %")``.
+
+
+##### 2. Implement *wrapStr* additional argument
+
+Implement *wrapStr* additional argument at least for .keys(), .values(),
+.entries() and .arg().
+
+It will provide a simple wrapping string (see previous example) that will be
+applied only if that method renders something.
+
+This way, if in previous example, *filter* were had been an empty array even
+the *where* clause (provided through this wrapping argument) weren't got
+rendered so, executing that query, all rows would be returned.
+
+
+##### 3. Implement .data() Template API method
+
+After previous step, we can implement new Template API method with the same
+name (*.data()*).
+
+This method will return a new instance of the template with its *data*
+attribute changed.
+
+It will work in three ways:
+
+  * ``myTpl.data(key, value)`` where only specified key will be changed.
+  * ``myTpl.data(newData)`` where newData entries will replace existing ones.
+  * ``myTpl.data(newData, true)`` where whole data property will be replaced.
+
+This third piece will allow us to "mutate" queries by specifying different
+column list to show or filters to apply (required arguments would change in
+this case).
+
+
+##### 4. Enhance CLI functionality with mutations
+
+Extend CLI controller so that, in multitemplate case, when addressing a temlate
+(such as 'list') we could add a literal *data* specification in parentheses
+and, in that case, template will get mutated according that.
+
+I.e. following our [initial example](#template-example), 'list' and listByDept'
+queries would be merged in single one:
+
+
+```javascript
+tpl.list = new sqltt({
+    data: {
+        args: ["id", "dptName", "name"],
+        filter: [],
+    },
+    sql: $=>`
+        select ${$.arg($.data("args"))}
+        from personnel
+        join depts using(dptId)
+        ${$.entries($.data("filter"), "and", "where %")}
+    `,
+});
+```
+
+Now, to get previously named *listByDept* query from CLI, we just need to run:
+
+**$ ``node personnel.sql.js 'list({filter: ["dptId"]})' | psql tiaDB``**
+
+```sh
+ id | dptid |  dptname   |   name    | sex
+----+-------+------------+-----------+-----
+  2 | oper  | Operations | Mortadelo | m
+  3 | oper  | Operations | Filemon   | m
+(2 rows)
+```
+
+
+##### N. Update documentation
+
+Update documentation with that functionalities.
+
+Remember to consider examples for GraphQL APIs implementations.
+
 
 
 FEATURES
@@ -825,6 +987,7 @@ $=>$`
 
 API REFERENCE
 -------------
+
 <!-- {{{ -->
 *SQLTT* involves two API interfaces:
 
@@ -1011,6 +1174,8 @@ tpl.getUserData = new sqltt($ => ({
     `,
 }));
 ```
+
+#### data(str)
 
 
 ### Static Methods
