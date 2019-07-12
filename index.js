@@ -1,20 +1,10 @@
 "use strict";
-const ENGINE_ENV_VAR = 'SQL_ENGINE';
+const D = require("./lib/definitions");
 const hlp = require("./lib/helpers");
 const engines = require("./lib/engines");
-const argParser = (v)=>v===undefined?null:v;
 const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
-const re_cli = /(?:^|_)((?:no)?cli)$/;
-const re_rowtrim = /^(?:\s*\n)*|(?:\n\s*)*$/g;
-const $options$ = Symbol();
-const _object_ = Object.getPrototypeOf({});
-const Fs = require("fs");
-const SQLTT_VERSION = JSON.parse(
-    Fs.readFileSync(__dirname + "/package.json")
-).version;
-
 
 
 const sqltt = (function(){ // Sql Tagged Template Engine
@@ -31,28 +21,28 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             engName,
             envDefault,
         ] = [
-            ((me || {})[$options$] || {}).default_engine,
+            ((me || {})[D.sym_options] || {}).default_engine,
             engName0,
-            process.env[ENGINE_ENV_VAR],
+            process.env[D.engine_env_var],
         ]
             .map(function update_isCli(str) {
-                const m = (str || "").match(re_cli);
+                const m = (str || "").match(D.re_cli);
                 if (m) isCli = m[1] == "cli";
                 return str; // Pass through
             })
             .map(function pickFlavour(str) {
-                return (str||"").replace(re_cli, "")
+                return (str||"").replace(D.re_cli, "")
             })
         ;
 
         const flavour = engName || envDefault || tplDefault || "default";
         let name = isCli
             ? flavour+"_cli"
-            : flavour.replace(re_cli, "")
+            : flavour.replace(D.re_cli, "")
         ;
 
         if (isCli && ! engines[name]) {
-            console.error(
+            D.D.console.error(
                 "-- Unknown/Unimplemented cli engine: "
                 + name
                 + ". Using default..."
@@ -80,7 +70,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         return hlp.sortArgs(
             sourceTpl.args || []
             , typeof tplArgs == "object" ? tplArgs : []
-            , me[$options$].check_arguments
+            , me[D.sym_options].check_arguments
         );
     };//}}}
     function loadTemplate(me, inTpl) {//{{{
@@ -133,7 +123,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             ? qSrc
             : [qSrc]
         ;
-        console.log (
+        D.console.log (
             qList
                 .map(function(q) {
                     if (! (q instanceof sqltt)) throw "Not a sqltt instance.";
@@ -152,8 +142,8 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
     function sqltt(sourceTpl, options = {}) {//{{{
         const me = this;
-        me.version = SQLTT_VERSION;
-        me[$options$] = options;
+        me.version = D.version;
+        me[D.sym_options] = options;
         loadTemplate(me, sourceTpl);
         checkTemplate(me);
         me.sqlCache = {};
@@ -177,14 +167,14 @@ const sqltt = (function(){ // Sql Tagged Template Engine
 
         const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)));
         me.sqlCache[eng.name] = outSql;
-        return outSql.replace(re_rowtrim, "");
+        return outSql.replace(D.re_rowtrim, "");
     };//}}}
     sqltt.prototype.args = function args(data = {}) {//{{{
         const me = this;
         if (data instanceof Array) return data;
             // Accept regular positional parameters too
             // (No check is made in this case).
-        return me.argList.map(k=>argParser(data[k]));
+        return me.argList.map(k=>D.argParser(data[k]));
     };//}}}
     sqltt.prototype.concat = function concat(str) {//{{{
         const me = this;
@@ -200,7 +190,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             Object.create(Object.getPrototypeOf(me))
             , me
         );
-        clone[$options$] = {...me[$options$], ...opts};
+        clone[D.sym_options] = {...me[D.sym_options], ...opts};
         return clone;
     };//}}}
 
@@ -208,7 +198,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // Static mehtods and properties:
     // ---------------
 
-    sqltt.version = SQLTT_VERSION;
+    sqltt.version = D.version;
     sqltt.publish = function publish(module, qSrc, options) {//{{{
 
         // Allow to use global options specially for multi-template files:
@@ -242,13 +232,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
                     ! qId || ! qSrc[qId]
                 )//}}}
                 { // then - List available ones:{{{
-                    console.log ("Available queries: " + Object.keys(qSrc).join(", "));
+                    D.console.log ("Available queries: " + Object.keys(qSrc).join(", "));
                 }//}}}
                 else if ( // Regular object{{{
-                    Object.getPrototypeOf(qSrc[qId]) === _object_
+                    Object.getPrototypeOf(qSrc[qId]) === D.proto_object
                 )//}}}
                 { // then - Threat simple objects as exported datasets:{{{
-                    console.log(
+                    D.console.log(
                         (
                             "\n"
                             + String(
