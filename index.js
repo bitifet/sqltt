@@ -70,24 +70,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
         return src;
     };//}}}
-    function logQuery(qSrc, args, eng) {// CLI output helper {{{
-        // Accept single query template or Array
-        let qList = qSrc instanceof Array
-            ? qSrc
-            : [qSrc]
-        ;
-        D.console.log (
-            qList
-                .map(function(q) {
-                    if (! (q instanceof sqltt)) throw "Not a sqltt instance.";
-                    return [
-                        eng.argWrapper.bind(q)(args),
-                        q.sql('cli'),
-                    ].join("\n");
-                })
-                .join("\n;\n")
-        );
-    };//}}}
+    const cliMode = (...args)=>require("./lib/cli_mode").bind(sqltt)(...args);
 
 
     // Constructor:
@@ -168,51 +151,16 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             };
         };
 
-        // Export for library usage:
-        module.exports = qSrc;
-
-        // CLI usage:
-        if (! module.parent) {
-
-            const eng = engine.resolve(null, 'cli');
-            const args = process.argv.slice(2); // Get shell arguments.
-
-            if (qSrc instanceof sqltt) {
-                logQuery(qSrc, args, eng);
-            } else {
-                const qId = args.shift()        // Extract first as query id.
-                if ( // Unexistent query or unspecified.{{{
-                    ! qId || ! qSrc[qId]
-                )//}}}
-                { // then - List available ones:{{{
-                    D.console.log ("Available queries: " + Object.keys(qSrc).join(", "));
-                }//}}}
-                else if ( // Regular object{{{
-                    Object.getPrototypeOf(qSrc[qId]) === D.proto_object
-                )//}}}
-                { // then - Threat simple objects as exported datasets:{{{
-                    D.console.log(
-                        (
-                            "\n"
-                            + String(
-                                qId + ' ' + JSON.stringify(qSrc[qId], null, 4)
-                            )
-                        )
-                        .replace(/\n/g, "\n-- ")
-                        .trim()
-                    );
-                }//}}}
-                else
-                { // Render selected query:{{{
-                    logQuery(qSrc[qId], args, eng);
-                };//}}}
-            };
-        };
-
         // NOTE:
         // Arrays of templates are allowed in order to specify multiple queries
         // expected to execute in single transaction. Specially in databases
         // like Oracle which doesn't support complex CTE's.
+
+        // Export for library usage:
+        module.exports = qSrc;
+
+        // CLI usage:
+        if (! module.parent) cliMode(qSrc);
 
     };//}}}
 
