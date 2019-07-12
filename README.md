@@ -348,6 +348,7 @@ Table of Contents
 * [ABOUT SQLTT](#about-sqltt)
     * [About this prerelease](#about-this-prerelease)
     * [Release TODO](#release-todo)
+        * [Implement commmnd-line modifiers](#implement-commmnd-line-modifiers)
         * [Implement Mutable Queries](#implement-mutable-queries)
             * [1. Implement .data(key) Tag API method](#1-implement-datakey-tag-api-method)
             * [2. Implement *wrapStr* additional argument](#2-implement-wrapstr-additional-argument)
@@ -470,6 +471,13 @@ SQLTT-1.0.0 soon.
 
 
 ### Release TODO
+
+#### Implement commmnd-line modifiers
+
+  * Implement --engine=eng_name to override SQL_ENGINE env. var.
+
+  * Implement --all to render all defined templates.
+    - Precede each one with a comment showing its name.
 
 #### Implement Mutable Queries
 

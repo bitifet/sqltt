@@ -5,7 +5,7 @@ const engine = require("./lib/engines");
 const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
-
+const isCli = m=>(! m.parent || D.emulateCli);
 
 const sqltt = (function(){ // Sql Tagged Template Engine
 
@@ -160,7 +160,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         module.exports = qSrc;
 
         // CLI usage:
-        if (! module.parent) cliMode(qSrc);
+        if (isCli(module)) cliMode(qSrc);
 
     };//}}}
 
