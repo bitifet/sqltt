@@ -11,6 +11,12 @@ const re_whitespace = /[\s\n\r]+/gm;
 //     - By explicit specification (.sql(eng) / .args(eng))
 //     - By absolute default ("default")
 //
+//   * Test options:
+//     - *default_engine* should effectively change default engine.
+//       - ...it should default to "default".
+//     - *check_arguments* should enable / disable argumenets checking.
+//       - ...it should default to true.
+//
 //   * Test *_nocli and nocli.
 
 // Helpers

@@ -6,9 +6,10 @@
 
 ----------------------------------------------------
 
+<!-- {{{ -->
 
 *SQL Tagged Templates* (sqltt) allows to easily manage SQL queries from
-Javascript ([or even non Javascript](using-from-non-javascript-languages))
+Javascript ([or even non Javascript](#using-from-non-javascript-languages))
 Projects taking advantadge of the [ES6+ Tagged
 Templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#Tagged_templates)
 feature.
@@ -25,7 +26,7 @@ executed on different RDBMS.
 
 > ☞ [About this prerelease…](#about-this-prerelease)
 
-
+<!-- }}} -->
 
 | 💡 [Examples](#examples)                               | 📖 [Usage Manual](#usage-manual)    | 💼 **More...**                          |
 |--------------------------------------------------------|-------------------------------------|-----------------------------------------|
@@ -40,6 +41,10 @@ Examples
 
 Following are a few examples to better understand what *SQLTT* does and how
 powerful it is just in a glance.
+
+> 📌 Unless stated otherwise, all following examples are for *PostgreSQL*
+> engines. Either case, if engine is not specified, a "generic" one gets used
+> (which nowadays is exactly the same as Postgres one).
 
 
 ### Template example
@@ -91,6 +96,48 @@ sqltt.publish(module, tpl); // Export and make available from CLI
 ```
 
 <!-- }}} -->
+
+
+#### Syntax highlighting
+
+As long as *SQLTT* template files are javascript files you would probably get
+javascript syntax highlighting in your preferred editor by default. But you
+would probably prefer SQL hilighting instead or, even better, both wherever
+they apply.
+
+Most obvious solutions is to use .sql extension instead (or use a *modeline*
+specifying different file type in editors that support it such as vim):
+
+**$ ``mv personnel.sql.js personnel.js.sql``**
+
+But this way you will loose javascript syntax highlighting in place.
+
+Better solution would be to keep default *javascritp* syntax highlighting and
+change it to SQL just for the sections where it's needed.
+
+This is why in this documentation uses '.sql.js' extension for template files
+instead of '.js.sql'.
+
+This can be esasily be done in vim, and probably in many other editors (if you
+know it for any other, please send me a reference to include in this section).
+
+
+#### Block-specific syntax highlighting in vim
+
+To enable *block-specific* syntax highlighting in vim see [Different syntax
+highlighting within regions of a
+file](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file).
+
+
+```javascript
+tpl.someQuery = new sqltt( /* @@sql@@ */ $=>$`
+    -- Your query here
+` /* @@/sql@@ */);
+```
+
+> 📌 You can find more complete examples in the [Examples directory of this GIT
+> repository](https://github.com/bitifet/sqltt/tree/master/examples).
+
 
 ### Executing from cli
 
@@ -243,6 +290,8 @@ methods and their options.
 
 ### Using from non javascript languages
 
+<!-- {{{ -->
+
 Athough they're javascript, we can take advantadge of *SQLTT* templates even
 for other language programs.
 
@@ -286,6 +335,7 @@ node sqlsrc/articles.sql.js update > sql/articles.update.sql
 # ....
 ```
 
+<!-- }}} -->
 
 USAGE MANUAL
 ============
@@ -308,10 +358,13 @@ Table of Contents
 * [BASIC CONCEPTS](#basic-concepts)
     * [Engines](#engines)
         * [Currently supported engines](#currently-supported-engines)
+        * [Adding more Database Engines](#adding-more-database-engines)
     * [Engine Flavours and Targets](#engine-flavours-and-targets)
         * [SQL_ENGINE environment variable](#sql_engine-environment-variable)
 * [SETUP AND USAGE](#setup-and-usage)
     * [Package setup](#package-setup)
+    * [Syntax](#syntax)
+        * [Accepted Options:](#accepted-options)
     * [Writing templates](#writing-templates)
     * [Usage](#usage)
         * [From application](#from-application)
@@ -346,19 +399,6 @@ Table of Contents
     * [String Concatenation](#string-concatenation)
 * [TODO](#todo)
 * [Contributing](#contributing)
-* [OUTDATED:](#outdated)
-    * [Single-query template files:](#single-query-template-files)
-        * [*template* parts:](#template-parts)
-        * [Valid *options*:](#valid-options)
-    * [Usage Examples](#usage-examples)
-        * [From NodeJS application:](#from-nodejs-application)
-        * [From console](#from-console)
-    * [Template Examples](#template-examples)
-        * [Simple template file](#simple-template-file)
-        * [Simpler template example with no boilerplate](#simpler-template-example-with-no-boilerplate)
-        * [Full example with nested templates](#full-example-with-nested-templates)
-    * [Supported Database Engines](#supported-database-engines)
-        * [Adding more Database Engines](#adding-more-database-engines)
 
 <!-- vim-markdown-toc -->
 
@@ -398,6 +438,8 @@ snipppets or whole queries and [much more](#features) fully embracing the
 
 ### About this prerelease
 
+<!-- {{{ -->
+
 I started publishing prereleases because I've decided that next SQLTT version
 will be 1.0.0 because it has so breaking changes to require increasing major
 version number.
@@ -424,12 +466,16 @@ SQLTT-1.0.0
 I hope it won't continue growing much more and I could deliver final
 SQLTT-1.0.0 soon.
 
+<!-- }}} -->
+
 
 ### Release TODO
 
 #### Implement Mutable Queries
 
 ##### 1. Implement .data(key) Tag API method
+
+<!-- {{{ -->
 
 It will give access to data declared in *data* key from template source and
 will be able to be used from other methods such as .entries() to access data
@@ -457,8 +503,11 @@ tpl.getUserData = new sqltt({
 > were provided. This way, previous call to *.entries()* could be simplified as
 > ``$.entries("filter", "and", "where %")``.
 
+<!-- }}} -->
 
 ##### 2. Implement *wrapStr* additional argument
+
+<!-- {{{ -->
 
 Implement *wrapStr* additional argument at least for .keys(), .values(),
 .entries() and .arg().
@@ -470,8 +519,11 @@ This way, if in previous example, *filter* were had been an empty array even
 the *where* clause (provided through this wrapping argument) weren't got
 rendered so, executing that query, all rows would be returned.
 
+<!-- }}} -->
 
 ##### 3. Implement .data() Template API method
+
+<!-- {{{ -->
 
 After previous step, we can implement new Template API method with the same
 name (*.data()*).
@@ -489,8 +541,11 @@ This third piece will allow us to "mutate" queries by specifying different
 column list to show or filters to apply (required arguments would change in
 this case).
 
+<!-- }}} -->
 
 ##### 4. Enhance CLI functionality with mutations
+
+<!-- {{{ -->
 
 Extend CLI controller so that, in multitemplate case, when addressing a temlate
 (such as 'list') we could add a literal *data* specification in parentheses
@@ -527,14 +582,17 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 (2 rows)
 ```
 
+<!-- }}} -->
 
 ##### N. Update documentation
+
+<!-- {{{ -->
 
 Update documentation with that functionalities.
 
 Remember to consider examples for GraphQL APIs implementations.
 
-
+<!-- }}} -->
 
 FEATURES
 --------
@@ -599,10 +657,8 @@ FEATURES
     - SQL for every database are generated and cached the first time they're
       required and then always consumed from caché.
 
-  * SQL Syntax Hilighting in your preferred editor:
-    - By using .sql extension instead of .js (despite the little js overhead).
-    - By ``-- @@/sql@@``and ``-- @@/sql@@`` comments [in
-      Vim](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
+  * SQL [Syntax Highlighting](#syntax-highlighting).
+
 <!-- }}} -->
 
 
@@ -610,6 +666,8 @@ BASIC CONCEPTS
 --------------
 
 ### Engines
+
+<!-- {{{ -->
 
 *SQLTT* is database agnostic in the sense that it only provide a templating
 layer and you are responsible to write SQL suitable for your specific
@@ -638,8 +696,11 @@ Or even by variable name, at least in many database CLIs:
 To handle these specific differences between targetted databases *SQLTT* uses
 small specialyzed libraries called *engines*.
 
+<!-- }}} -->
 
 #### Currently supported engines
+
+<!-- {{{ -->
 
 Currently supported engines by SQLTT are:
 
@@ -652,13 +713,21 @@ Currently supported engines by SQLTT are:
 | ``oracle``         | Oracle-specific SQL.                                |
 | ``oracle_cli``     | Oracle-specific SQL for its CLI (sqlplus) client.   |
 
+<!-- }}} -->
 
-> 🆘
+#### Adding more Database Engines
 
-FIXME: Write out this subject...
+<!-- {{{ -->
 
+If you are interested in adding more engines or improving existing ones, check
+``lib/engines.js`` file (They're too easy to implement) and please, feel free to
+send me patches to include your improvements.
+
+<!-- }}} -->
 
 ### Engine Flavours and Targets
+
+<!-- {{{ -->
 
 As you could see from previous table, we have two engines for each specific
 database flavour (PostgreSQL, Oracle, etc..): one targetting SQL for specific
@@ -676,7 +745,11 @@ On the other hand, when we want to [use it from CLI](from-cli) we may be
 interested in only select the cli-specific target but allowing to change the
 actual database flavour.
 
+<!-- }}} -->
+
 #### SQL_ENGINE environment variable
+
+<!-- {{{ -->
 
 To do so we can simply specify 'cli'. This way 'default_cli' will be addressed
 by default, but it can be overridden by 'SQL_ENGINE' environment variable
@@ -689,18 +762,64 @@ engine of selected database flavour.
 This can be useful if we only want to visually inspect how our query will be
 served to our application through `.sql()` (or `.sql(flavour)`) method.
 
+<!-- }}} -->
 
 SETUP AND USAGE
 ---------------
 
 ### Package setup
 
+<!-- {{{ -->
+
 Install *sqltt* executing ``npm install --save sqltt`` within your
 project directory.
 
+<!-- }}} -->
+
+### Syntax
+
+<!-- {{{ -->
+
+To load *SQLTT*:
+
+```javascript
+const sqltt = require("sqltt");
+```
+
+To create single *SQLTT* template:
+
+```javascript
+const q = new sqltt(source, options);
+```
+
+**Where:**
+
+  * ``source``: Defines the template and possibly other parameters (see
+    [template parts:](#template-format) below).
+
+  * ``options``: Optional *options* object to specify a few behavioral
+    modifiers.
+
+<!-- }}} -->
+
+#### Accepted Options:
+
+<!-- {{{ -->
+
+  * **default_engine:** *(Optional)* Change the default rendering engine for
+    that template. That is: the engine that will be used to render SQL when it
+    is not explicitly specified in ``.sql()`` method call.
+
+  * **check_arguments** (default: *true*): Allows to avoid template's *args*
+    validation checks (they will be auto-corrected instead of throwing an
+    error).
+
+<!-- }}} -->
 
 ### Writing templates
+
 <!-- {{{ -->
+
 Every template file may contain single or multiple *SQLTT* templates and may
 export them either in its source form as already constructed *SQLTT* instances.
 
@@ -734,7 +853,9 @@ template sources.
 <!-- }}} -->
 
 ### Usage
+
 <!-- {{{ -->
+
 The final ``sqltt.publish(module, tpl)`` statement in [previous
 examples](#writing-templates) replaces classic ``module.exports = tpl`` and is
 almost equivalent to:
@@ -758,9 +879,11 @@ This allows us to use our constructed sqltt instances:
 1. [From application](#from-application): As a module from NodeJS application.
 2. [From CLI](#from-cli): As a command line tool to get
    *whatever_our_database_cli suitable* rendered SQL.
+
 <!-- }}} -->
 
 #### From application
+
 <!-- {{{ -->
 **Single Template Example:**
 
@@ -806,6 +929,7 @@ const userProfile_args = myQueries.userProfile.args({
 <!-- }}} -->
 
 #### From CLI
+
 <!-- {{{ -->
 From command line we just need to execute our template through *node*:
 
@@ -836,6 +960,7 @@ select * from personnel;
 <!-- }}} -->
 
 ##### Providing arguments
+
 <!-- {{{ -->
 If our query requires arguments, we can feed it by simply adding them to the
 command line:
@@ -857,11 +982,13 @@ user@host:~/examples$ node personnel.sql.js show 23
 >
 > For this reason all arguments are quoted unconditionally given that most
 > database engines will automatically cast them as numbers when needed.
+
 <!-- }}} -->
 
-
 ##### Executing queries
+
 <!-- {{{ -->
+
 If we want to directly execute the query instead, we just need to pipe it to
 our preferred database CLI interpreter.
 
@@ -881,7 +1008,9 @@ user@host:~/examples$ node personnel.sql.js list | psql tiaDB
 <!-- }}} -->
 
 ##### Selecting Engine Flavour
+
 <!-- {{{ -->
+
 To render SQL from CLI, *default_cli* engine is selected by default except if
 [``default_engine`` option](#optionsoptsobject) is set. For example, for
 ``temlate_engine: "postgresql"``, *postgresqsl_cli* will be picked for instead.
@@ -894,13 +1023,12 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
 
   b) Setting just for single execution (Ex.: ``SQL_ENGINE=oracle node
       myTpl.sql.js ...``).
-<!-- }}} -->
 
+<!-- }}} -->
 
 ##### Query output inspection
 
-
-(nocli, *_nocli)
+TODO: (``nocli``, ``*_nocli``)...
 
 
 
@@ -908,6 +1036,7 @@ TEMPLATE FORMAT
 ---------------
 
 <!-- {{{ -->
+
 SQLTT templates consist in a JSON object with one or more of the following keys:
 
   * **sql:** *(Mandatory)* a SQL string or a [SQL Callback](#sql-callback).
@@ -918,15 +1047,14 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
     order in which they must be numbered. If ommitted or incomplete, the rest
     of arguments will be appended in appearing order.
 
+  * **alias:** *(Optional)* Provide an alias name to be used in case of de whole
+    query being included beside others through ``$.include([subq1, ...])``.
+
   * **altsql:** *(Optional)* One of the main goals of **SQLTT** is not having
     to mantain multiple versions of the same query for different databases. But
     when there is no other option, *altsql* let us to provide alternatives for
     specific database engines. Ex.: `` altsql: { oracle: /* Oracle-specific sql
     string or cbk */} ``.
-
-  * **default_engine:** *(Optional)* Change the default rendering engine for
-    that template. That is: the engine that will be used to render SQL when it
-    is not explicitly specified in ``.sql()`` method call.
 
   * **data:**
 
@@ -936,10 +1064,13 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
   * Arguments in given order: ``{args: ["baz"], sql: $=>$`select foo from bar where baz = ${"baz"}`} ``.
   * Arguments in appearence order: ``$=>$`select foo from bar where baz = ${"baz"}` ``.
   * Simple string: ``"select foo from bar"`` (no argumments in this case)
+
 <!-- }}} -->
 
 ### SQL Callback
+
 <!-- {{{ -->
+
 The *SQL Callback* receives single parameter (named `$`, even we can name it
 whatever we like).
 
@@ -971,8 +1102,8 @@ $=>$`
 
   * In fact, ``${"value"}`` is just a shorthand for ``${$.arg("value")}`` (or
     ``${X.arg("value")}`` if ``X`` is used instead of ``$``).
-<!-- }}} -->
 
+<!-- }}} -->
 
 ### Arguments declaration
 
@@ -1029,17 +1160,29 @@ sqltt(_my_template_)`), we are allowed to use below methods:
 
 #### options(optsObject)
 
+<!-- {{{ -->
 
+Let to override [initially specified options:](#accepted-options).
 
+It returns a new sqltt instance identical to original except for the modified
+options.
+
+Options not specified in provided *optsObject* will remain the same as it were
+specified in the original instance.
+
+<!-- }}} -->
 
 ### Tag API
 
-> 📌 Tag API methods outputs rendered SQL substrings in the propper syntax for
-> targetted database engine. Further examples will follow PostgreSQL syntax
-> unless otherwise said.
+Tag API methods outputs rendered SQL substrings in the propper syntax for
+targetted database engine.
+
+> 📌 Further examples will follow PostgreSQL syntax unless otherwise said.
 
 
 #### arg(argName, alias)
+
+<!-- {{{ -->
 
 Provide the ability to interpolate an argument by its name.
 
@@ -1107,12 +1250,13 @@ simple string can be used as a *shorthand*.
 > and, for those which accept it, it is optional anyway. Future SQLTT versions
 > may render it for engines that support it.
 
-
+<!-- }}} -->
 
 #### include(src [, bindings])
 
-Provide the ability to nest other templates. 
+<!-- {{{ -->
 
+Provide the ability to nest other templates. 
 
 **📝 Parameters:**
 
@@ -1147,12 +1291,16 @@ you don't need to use *.include()* at all.
 
 **🗂️ Examples:**
 
+<!-- }}} -->
+
 
 #### keys(), values() and entries()
 
 
 
 #### literal(str)
+
+<!-- {{{ -->
 
 Having regular strings are normally interpreted as shorthand for simple
 argument interpolations, ``.literal()`` provide a way to inject a raw string.
@@ -1174,6 +1322,7 @@ tpl.getUserData = new sqltt($ => ({
     `,
 }));
 ```
+<!-- }}} -->
 
 #### data(str)
 
@@ -1205,6 +1354,8 @@ Advanced Features
 -----------------
 
 ### Hooks
+
+<!-- {{{ -->
 
 Hooks lets us to wrap arguments differently according to the actual engine.
 
@@ -1253,8 +1404,11 @@ the actual SQL (just commenting in and out that hook).
 
 ```
 
+<!-- }}} -->
 
 ### SQL Alternatives
+
+<!-- {{{ -->
 
 If it is impossible or unreasonable to use the same sql structure for some
 database engines, *sqltt* allows to specify a completely different sql source
@@ -1279,8 +1433,11 @@ tpl.someQuery = new sqltt({
 > alternatives to ensure its consistency so using *args* property to fix their
 > order is hardly encouraged.
 
+<!-- }}} -->
 
 ### String Concatenation
+
+<!-- {{{ -->
 
 *sqltt* template instances provide a ``.concat(<string>)`` method returning a new
 instance whose ``sql(<whatever>)`` method will return provided string
@@ -1302,7 +1459,7 @@ db.queryRows(
 ).then(rows=>console.log(rows);
 ```
 
-
+<!-- }}} -->
 
 TODO
 ----
@@ -1336,234 +1493,4 @@ If you are interested in contributing with this project, you can do it in many w
   * Whatever you like...
 
 Please, contact-me, open issues or send pull-requests thought [this project GIT repository](https://github.com/bitifet/sqltt)
-
-
-
-
-
-OUTDATED:
----------
-
-(from version 0.3.1 and earlier)
-
-
-### Single-query template files:
-
-*sqltt* is intended to be required from SQL template files. (See [Template
-Examples](#template-examples) below). 
-
-Template structure will usually be as follows:
-
-```javascript
-const sqltt = require("sqltt");             // Require sqltt
-const q = new sqltt(template, options);     // Define a query template.
-sqltt.publish(module, tpl);                 // Export and make available from CLI
-```
-
-**Where:**
-
-  * ``template``: Defines the template and possibly other parameters (see
-          [template parts:](#template-parts) below).
-  * ``options``: Optional *options* object to specify a few behavioral modifiers.
-
-**Usage Examples:**
-
-  * From application:
-
-```javascript
-const myQuery = require('path/to/my/sqltt_template.sql.js');
-const sql = myQuery.sql('postgresql'); // Get postgresql suitable SQL.
-const sql = myQuery.sql('oracle');     // Get postgresql suitable SQL.
-const args = myQuery.args({            // Get properly sorted and filtered
-    argument1: "value1",               // arguments array.
-    argument2: "value2",
-    /*...*/
-});
-```
-
-  * From command line:
-
-```sh
-# Get parametyzed sql to provide to some database CLI:
-$ node myQuery.sql.js arg1 arg2 "argument 3"
-# Do the same specifically for oracle engine:
-$ SQL_ENGINE=oracle node myQuery.sql.js arg1 arg2 # (...)
-# You also can directly pipe to that CLI:
-$ SQL_ENGINE=postgresql node myQuery.sql.js arg1 arg2 | psql myDb
-```
-
-
-#### *template* parts:
-
-  * ``sql``: **(Mandatory)** Actual SQL template of the following form (See
-    [examples](#template-examples) below):
-```
-  $=>$`(sql here)` 
-```
-  * ``args``: **(Optional)** Array of strings declaring argument names (and its
-    order).
-  * ``altsql``: **(Optional)** Let to provide alternative queries for given
-    engines when compatibility hooks aren't enough.
-  * alias: **(Optional)** Provide an alias name to be used in case of de whole
-    query being included beside others through ``$.include([subq1, ...])``.
-
-
-#### Valid *options*:
-
-  * **check_arguments** (default: *true*): Allows to avoid template's *args*
-    validation checks (they will be auto-corrected instead of throwing an
-    error).
-
-
-### Usage Examples
-
-
-> 📌 All examples are for *PostgreSQL* engines. Either case, if engine is not
-> specified, a "generic" one gets used (which nowadays is exactly the same as
-> Postgres one).
-
-#### From NodeJS application:
-
-```javascript
-const myQuery = require('path/to/myQuery.sql.js');
-const db = require('ppooled-pg')(connection_data); // Or your preferred library.
-const inputData = {
-    arg1: "value1",
-    arg2: "value2",
-    /* ... */
-}
-db.queryRows(
-    myQuery.sql("postgresql")
-    , myQuery.args(inputData)
-        // (Unused arguments will be automatically ignored)
-).then(rows=>console.log(rows);
-```
-
-> 📌 From version 0.3.0, [ppooled-pg supports for *SQL Tagged
-> Templates*](https://www.npmjs.com/package/ppooled-pg#support-for-sql-tagged-templates)
-> so we could simply have wrote:
-> ```sql
-> db.queryRows(myQuery, inputData);
-> ```
-
-
-#### From console
-
-**For inspection:**
-```sh
-SQL_ENGINE=postgresql node path/to/myQuery.sql.js
-```
-
-**For execution:**
-
-```sh
-SQL_ENGINE=postgresql node path/to/myQuery.sql.js arg1, arg2 | psql dbName [other_arguments...]
-```
-
-**In multiple query format:**
-
-```sh
-SQL_ENGINE=postgresql node path/to/myQueryRepo.sql.js queryName
-# ... arg1, arg2 | psql dbName [...] # To execute
-```
-
-
-
-
-### Template Examples
-
-
-#### Simple template file
-
-```javascript
-const sqltt = require("sqltt");
-const q = new sqltt({
-    // args: ["company_name", "company_dept"], // Specify parameters order
-                                               // (optional)
-    sql: /* @@sql@@ */ $=>$`
-        select *
-        from personnel
-        where company_name = ${"company_name"}
-        and company_dept = ${"company_dept"}
-    `, /* @@/sql@@ */
-});
-
-sqltt.publish(module, q);
-```
-
-> 📌 ``/* @@sql@@ */`` and ``/* @@/sql@@ */`` comments are optional (and, for
-> the sake of simplicity, I won't use them again in this document.
->
-> I only left them once because I'm sure that vim users [will enjoy
-> them](http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file). 
-
-
-#### Simpler template example with no boilerplate
-
-```javascript
-module.exports = $ => ({
-    sql: $`
-        select *
-        from privileges
-        where user_id = ${"user_id"}
-        and privilege_name = ${"privilege_name"}
-    `,
-});
-```
-
-> 📌 This version should be used to instantiate *sqltt* (e.g: ``const myQuery =
-> new sqltt(require("path/to/myQuery.sql.js"))``) and connot be used [from
-> console](#from-console).
->
-> The only advantadge of this approach is that we can bundle many queries in
-> single file and only instantiate those we are actually going to use.
-
-
-#### Full example with nested templates
-
-```javascript
-const sqltt = require("sqltt");
-const q = new sqltt({
-    sql: $=>$`
-        with usersCte as (
-            ${
-                // Include another query:
-                $.include(require("./personnel.sql.js"))
-            }
-        )
-        select *
-        from usersCte
-        join (
-            ${
-                // Include another query and fill some arguments:
-                $.include(require("./privileges.sql.js"), {privilege_name: "'login'"})
-            }
-        ) as loggeableUsers
-    `,
-});
-sqltt.publish(module, q);
-```
-
-> 📌 It does not matter if nested templates are already instantiated (like
-> [first example](#simple-template-file)) or not like ([second
-> one](#simpler-template-example-with-no-boilerplate)).
-
-
-### Supported Database Engines
-
-Currently supported engines are:
-
-  * *postgresql:* For PostgreSQL Database.
-  * *postgresqlcli:* For PostgreSQL CLI output.
-  * *oracle:* For Oracle Database.
-  * *oraclecli:* For Oracle CLI output.
-
-...and oracle still lacks CLI implementation (so fails back to default one).
-
-#### Adding more Database Engines
-
-If you are interested in adding more engines or improving existing ones, check
-``lib/engines.js`` file (They're too easy to implement) and please, feel free to
-send me patches to include your improvements.
-
 
