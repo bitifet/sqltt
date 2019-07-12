@@ -1,7 +1,7 @@
 "use strict";
 const D = require("./lib/definitions");
 const hlp = require("./lib/helpers");
-const engines = require("./lib/engines");
+const engine = require("./lib/engines");
 const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
 const sqlCompiler = require("./lib/sqlCompiler");
@@ -12,57 +12,10 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     // Private functions:
     // ------------------
 
-    function resolveEngine(me, engName0 = "") {//{{{
-
-        let isCli = false;
-
-        const [
-            tplDefault,
-            engName,
-            envDefault,
-        ] = [
-            ((me || {})[D.sym_options] || {}).default_engine,
-            engName0,
-            process.env[D.engine_env_var],
-        ]
-            .map(function update_isCli(str) {
-                const m = (str || "").match(D.re_cli);
-                if (m) isCli = m[1] == "cli";
-                return str; // Pass through
-            })
-            .map(function pickFlavour(str) {
-                return (str||"").replace(D.re_cli, "")
-            })
-        ;
-
-        const flavour = engName || envDefault || tplDefault || "default";
-        let name = isCli
-            ? flavour+"_cli"
-            : flavour.replace(D.re_cli, "")
-        ;
-
-        if (isCli && ! engines[name]) {
-            D.D.console.error(
-                "-- Unknown/Unimplemented cli engine: "
-                + name
-                + ". Using default..."
-            );
-            name = "default_cli";
-        };
-
-        const eng = engines[name];
-        if (! eng) throw new Error ("Unknown database engine: " + name);
-
-        return Object.assign({
-            name,
-            flavour,
-        }, eng);
-
-    };//}}}
     function getArguments(me, engName) {//{{{
         // Recursively retrieve arguments from template respecting
         // specified order (if given).
-        const eng = resolveEngine(me, engName);
+        const eng = engine.resolve(me, engName);
         const sourceTpl = me.getSource(eng.flavour);
         const tplArgs = sourceTpl.sql(
             new argCompiler(me, eng) ///// FIXME: Check if it is inexcusable to pick for engine for arguments.
@@ -161,7 +114,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     };//}}}
     sqltt.prototype.sql = function sql(engName) {//{{{
         const me = this;
-        const eng = resolveEngine(me, engName);
+        const eng = engine.resolve(me, engName);
         if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
         const qtpl = me.getSource(eng.flavour).sql;
 
@@ -221,7 +174,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         // CLI usage:
         if (! module.parent) {
 
-            const eng = resolveEngine(null, 'cli');
+            const eng = engine.resolve(null, 'cli');
             const args = process.argv.slice(2); // Get shell arguments.
 
             if (qSrc instanceof sqltt) {
