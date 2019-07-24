@@ -4,6 +4,18 @@ TO-DO list & notes
 TO-DO
 -----
 
+  * Handle inline comments at the end of query, specially when it is included
+    in another one (force line break after it).
+
+  * Implement dependency system:
+    - Dependencies will be prepended as CTEs without repetitions
+    - ...that is: dependencies of dependencies will be flattened and not repeated.
+    - Specify them in 'cte' attribute of source.
+    - Name attribute will be mandatory to them and will be used as its alias to
+      ensure always using same name.
+    - Dependencies with same name won't be repeated, BUT they will be checked
+      to be the same object (error will be thrown otherwise).
+
   * Provide an option to decide, in cli output, wether non specified arguments
     will default to empty strings or its *set* commands not rendered at all (in
     order to respect previously setted values).
