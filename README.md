@@ -1483,6 +1483,8 @@ TODO
     - Comments Removal.
 
   * Incorporate Oracle comptibility Shims
+    - https://wiki.postgresql.org/wiki/Oracle_to_Postgres_Conversion
+    - http://www.sqlines.com/postgresql-to-oracle#most-complex-migration-issues
 
 
 Contributing

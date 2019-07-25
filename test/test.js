@@ -1,6 +1,6 @@
 const assert = require('assert');
 const sqltt = require('../');
-const re_whitespace = /[\s\n\r]+/gm;
+const re_whitespace = / +/gm;
 
 // TO-DO list
 // ==========
@@ -60,7 +60,7 @@ describe('sqltt class', function() {
 
     describe("Basic testing", function() {//{{{
 
-        it ('Contrructs well', function() {//{{{
+        it ('Constructs well', function() {//{{{
             assert.doesNotThrow(function() {
                 new sqltt (s0);
             });
@@ -109,7 +109,7 @@ describe('sqltt class', function() {
 
             assert.equal(
                 h_sql(s0, "oracle_cli")
-                , "select '&foo', '&bar', '&baz' ;"
+                , "select '&foo', '&bar', '&baz'\n ;"
             );
         });//}}}
 
@@ -211,6 +211,32 @@ describe('sqltt class', function() {
 
         });
 
+
+        it ('.include() - Still incomplete -', function() {
+
+            { m = "Ending inline comments doesn't break inclusion";//{{{
+                const q0 = new sqltt($=>$`s foo f bar\n-- Cmnt\n\n`);
+                assert.deepStrictEqual(
+                    h_sqle($=>$`w baz as (${q0}) s * f baz`)
+                    , [
+                        "DEFAULT: w baz as (s foo f bar\n-- Cmnt\n) s * f baz",
+                        "CLI: w baz as (s foo f bar\n-- Cmnt\n) s * f baz",
+                        "POSTGRESQL: w baz as (s foo f bar\n-- Cmnt\n) s * f baz",
+                        "POSTGRESQL_CLI: w baz as (s foo f bar\n-- Cmnt\n) s * f baz",
+                        "ORACLE: w baz as (s foo f bar\n-- Cmnt\n) s * f baz",
+                        "ORACLE_CLI: w baz as (s foo f bar\n-- Cmnt\n) s * f baz;",
+                    ]
+                    , m
+                );
+            }//}}}
+
+
+        });
+
+
+
+
+
     });
 
     describe('Other tests...', function() {
@@ -285,21 +311,21 @@ describe('sqltt class', function() {
             // q1:
             assert.equal(
                 h_sql(q1)
-                , "s (s $1, 'fixed_value' f) as subq1 f"
+                , "s (s $1, 'fixed_value' f\n) as subq1 f"
             );
             // q2:
             assert.equal(
                 h_sql(q2)
-                , "s (s $1, 'fixed_value' f) as subq1, (s $2, $3 f) as subq2 f"
+                , "s (s $1, 'fixed_value' f\n) as subq1, (s $2, $3 f\n) as subq2 f"
             );
             assert.equal(
                 h_sql(q2, "oracle")
-                , "s (s :1, 'fixed_value' f) subq1, (s :2, :3 f) subq2 f"
+                , "s (s :1, 'fixed_value' f\n) subq1, (s :2, :3 f\n) subq2 f"
             );
             // q3:
             assert.equal(
                 h_sql(q3)
-                , "s * f s (s $1, 'fixed_value' f) as subq1 f as supernest"
+                , "s * f s (s $1, 'fixed_value' f\n) as subq1 f\n as supernest"
             );
 
             assert.deepStrictEqual(

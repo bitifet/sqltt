@@ -4,9 +4,6 @@ TO-DO list & notes
 TO-DO
 -----
 
-  * Handle inline comments at the end of query, specially when it is included
-    in another one (force line break after it).
-
   * Implement dependency system:
     - Dependencies will be prepended as CTEs without repetitions
     - ...that is: dependencies of dependencies will be flattened and not repeated.
@@ -16,7 +13,7 @@ TO-DO
     - Dependencies with same name won't be repeated, BUT they will be checked
       to be the same object (error will be thrown otherwise).
 
-  * Provide an option to decide, in cli output, wether non specified arguments
+  * Provide an option to decide, in cli output, whether non specified arguments
     will default to empty strings or its *set* commands not rendered at all (in
     order to respect previously setted values).
 
@@ -44,12 +41,4 @@ TO-DO
   * Improve .concat() concatenation (check for trailing space/return and add if
     neccessary).
 
-
-Notes
------
-
-### Oracle equivalences
-
-https://wiki.postgresql.org/wiki/Oracle_to_Postgres_Conversion
-http://www.sqlines.com/postgresql-to-oracle#most-complex-migration-issues
 
