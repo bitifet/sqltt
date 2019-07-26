@@ -28,5 +28,8 @@
   "homepage": "https://github.com/bitifet/sqltt#readme",
   "devDependencies": {
     "mocha": "^6.1.4"
+  },
+  "dependencies": {
+    "chalk": "^2.4.2"
   }
 }

@@ -25,17 +25,32 @@ q.show = new sqltt( /* @@sql@@ */ $=>$`
     where id = ${"id"}
 ` /* @@/sql@@ */);
 
-const fields = ['sectionId', 'title', 'body'];
-//const fields = {sectionId: 'sectionId', title: 'title', body: 'contents'};
-q.insert = new sqltt( /* @@sql@@ */ $=>$`
-    insert into articles (${$.keys(fields)})
-    values (${$.values(fields)})
-` /* @@/sql@@ */);
 
-q.update = new sqltt( /* @@sql@@ */ $=>$`
-    update articles set ${$.entries(fields)}
-    where id = ${"id"}
-` /* @@/sql@@ */);
+const fieldsArr = ['sectionId', 'title', 'body'];
+q.insert = new sqltt({
+    description: "Perform an Insert.",
+    args: ["title", "body", "sectionId"],
+    sql: /* @@sql@@ */ $=>$`
+        insert into articles (${$.keys(fieldsArr)})
+        values (${$.values(fieldsArr)})
+    `, /* @@/sql@@ */
+});
+
+
+const fieldsObj = {sectionId: 'sectionId', title: 'title', body: 'contents'};
+q.update = new sqltt({
+    description: "Perform an update.",
+    args: {
+        "id": "Identifier",
+        "title": "Main title",
+        "contents": "Article contents",
+        "sectionId": "Related section id",
+    },
+    sql: /* @@sql@@ */ $=>$`
+        update articles set ${$.entries(fieldsObj)}
+        where id = ${"id"}
+    `, /* @@/sql@@ */
+});
 
 sqltt.publish(module, q);
 

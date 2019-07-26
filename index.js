@@ -20,11 +20,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         const tplArgs = sourceTpl.sql(
             new argCompiler(me, eng) ///// FIXME: Check if it is inexcusable to pick for engine for arguments.
         );
-        return hlp.sortArgs(
-            sourceTpl.args || []
+        const argSpc = hlp.parseArgSpec(sourceTpl.args);
+        const argList = hlp.sortArgs(
+            Object.keys(argSpc)
             , typeof tplArgs == "object" ? tplArgs : []
             , me[D.sym_options].check_arguments
         );
+        return [argSpc, argList];
     };//}}}
     function loadTemplate(me, inTpl) {//{{{
         if (
@@ -38,7 +40,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
             const sqlStr = me.source.sql;
             me.source.sql = $=>$`${$.literal(sqlStr)}`;
         };
-        me.argList = getArguments(me);
+        [me.argSpec, me.argList] = getArguments(me);
         me.argIdx = hlp.indexArgs(me.argList);
         me.hooks = me.source.hooks || [];
         return inTpl;
