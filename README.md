@@ -354,6 +354,7 @@ Table of Contents
             * [2. Implement *wrapStr* additional argument](#2-implement-wrapstr-additional-argument)
             * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
             * [4. Enhance CLI functionality with mutations](#4-enhance-cli-functionality-with-mutations)
+            * [5. Implement CTE "dependency" system](#5-implement-cte-dependency-system)
             * [N. Update documentation](#n-update-documentation)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
@@ -589,6 +590,34 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
   3 | oper  | Operations | Filemon   | m
 (2 rows)
 ```
+
+<!-- }}} -->
+
+##### 5. Implement CTE "dependency" system
+
+<!-- {{{ -->
+
+  * Add new optional attribute 'cte' to the template soure specification for
+    Common Table Expressions ("with" clause).
+
+  * This will accept any of the following:
+    - A {key: value} object of accepting same values that accepts $.include()
+      method.
+    - An array of the same kind of values.
+    - Single item of the same type.
+
+  * It will be considered as CTE's to be prepended to the actual query.
+    - In case of {key: value} object, each key will be used as CTE alias.
+    - Otherwise, *alias* attribute will be mandatory for resolved SQLTT instance.
+
+  * CTEs will be processed recursively. That is: In case a CTE have its own
+    CTE's, they will be flattened to the parent query CTE block.
+    - In case of a CTE having a CTE with the same alias as already added CTE,
+      it will be checked to be the same object and will be added single time.
+    - ...otherwise (same alias but not same object) en error will be thrown.
+
+  * CTEs from an $.include()'d query won't be flattened (except internally to
+    its own subctes) so aliases won't also collide.
 
 <!-- }}} -->
 
