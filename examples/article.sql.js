@@ -28,13 +28,14 @@ q.show = new sqltt( /* @@sql@@ */ $=>$`
 
 const fieldsArr = ['sectionId', 'title', 'body'];
 q.insert = new sqltt({
+    name: "ArticleInsert",
     description: "Perform an Insert.",
     args: ["title", "body", "sectionId"],
     sql: /* @@sql@@ */ $=>$`
         insert into articles (${$.keys(fieldsArr)})
         values (${$.values(fieldsArr)})
     `, /* @@/sql@@ */
-});
+}, {debug: true});
 
 
 const fieldsObj = {sectionId: 'sectionId', title: 'title', body: 'contents'};
@@ -52,5 +53,5 @@ q.update = new sqltt({
     `, /* @@/sql@@ */
 });
 
-sqltt.publish(module, q);
+sqltt.publish(module, q /*, {debug: true}*/);
 

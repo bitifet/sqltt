@@ -355,6 +355,7 @@ Table of Contents
             * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
             * [4. Enhance CLI functionality with mutations](#4-enhance-cli-functionality-with-mutations)
             * [5. Implement CTE "dependency" system](#5-implement-cte-dependency-system)
+            * [6. Add .options() methods to .publish() exports](#6-add-options-methods-to-publish-exports)
             * [N. Update documentation](#n-update-documentation)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
@@ -376,11 +377,14 @@ Table of Contents
             * [Selecting Engine Flavour](#selecting-engine-flavour)
             * [Query output inspection](#query-output-inspection)
 * [TEMPLATE FORMAT](#template-format)
+    * [Name](#name)
+    * [Description](#description)
     * [SQL Callback](#sql-callback)
     * [Arguments declaration](#arguments-declaration)
     * [Alternative SQL](#alternative-sql)
     * [Default Engine](#default-engine)
     * [Data](#data)
+    * [with](#with)
 * [API REFERENCE](#api-reference)
     * [Template API](#template-api)
         * [sql(engFlavour)](#sqlengflavour)
@@ -619,6 +623,19 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
   * CTEs from an $.include()'d query won't be flattened (except internally to
     its own subctes) so aliases won't also collide.
 
+  * DO NOT name it 'cte': 'with' would be more appropriate and widely
+    understandable.
+
+<!-- }}} -->
+
+
+##### 6. Add .options() methods to .publish() exports
+
+<!-- {{{ -->
+  * Not enumerable.
+  * Only if not "options" query exported.
+  * It will let to globally alter default options.
+  (Not strictly necessary for 1.0.0, but maybe...)
 <!-- }}} -->
 
 ##### N. Update documentation
@@ -689,6 +706,14 @@ FEATURES
       - ``$.entries()``.
         - Ex.: ``update foo set ${$.entries(someObj)} where ...``
       - And more comming (``$.if(cnd, thenCase, elseCase)``, ...).
+
+  * Debugging capabilities: A *debug* option can be enabled for single query or
+    whole *published* repository, those queries will log supplied arguments
+    every time *.arg()* method is called.
+    - This allows to cherry-pick debug information only for specific queries.
+    - Special "verbose" and "cli" values can be specified to show whole
+      provided (unparsed) argoments or to get
+      [kcli-suitable](#executing-from-cli) string.
 
   * Query Caché:
     - SQL for every database are generated and cached the first time they're
@@ -850,6 +875,13 @@ const q = new sqltt(source, options);
   * **check_arguments** (default: *true*): Allows to avoid template's *args*
     validation checks (they will be auto-corrected instead of throwing an
     error).
+
+  * **debug** (default: *false*): When true, every call to .args() method of
+    this query will be logged. Valid values:
+    - *verbose*: Will log original arguments object.
+    - *cli*: Generate output suitable for cli usage.
+    - *true* (Any other true value): Array of the actually provided arguments.
+
 
 <!-- }}} -->
 
@@ -1076,6 +1108,10 @@ TEMPLATE FORMAT
 
 SQLTT templates consist in a JSON object with one or more of the following keys:
 
+  * **name:** *(Optional)*
+
+  * **description:** *(Optional)*
+
   * **sql:** *(Mandatory)* a SQL string or a [SQL Callback](#sql-callback).
     Using  a simple string provides a leaner way to define SQL string. But no
     interpolated arguments are possible in this case.
@@ -1093,7 +1129,9 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
     specific database engines. Ex.: `` altsql: { oracle: /* Oracle-specific sql
     string or cbk */} ``.
 
-  * **data:**
+  * **data:** (UNIMPLEMENTED)
+
+  * **with:** (UNIMPLEMENTED)
 
 
 **Examples:**
@@ -1103,6 +1141,20 @@ SQLTT templates consist in a JSON object with one or more of the following keys:
   * Simple string: ``"select foo from bar"`` (no argumments in this case)
 
 <!-- }}} -->
+
+
+### Name
+
+An optional name to identyfy the query.
+
+To be used as default alias when query is included or used as CTE (with) for
+another and also for documentation and debug logging purposes.
+
+
+### Description
+
+An optional description.
+
 
 ### SQL Callback
 
@@ -1152,6 +1204,9 @@ $=>$`
 
 (Not yet implemented...)
 
+### with
+
+(Not yet implemented...)
 
 API REFERENCE
 -------------

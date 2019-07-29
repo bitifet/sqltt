@@ -63,6 +63,12 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
 
     };//}}}
+    function argsRender(me, data = {}) {//{{{
+        if (data instanceof Array) return data;
+            // Accept regular positional parameters too
+            // (No check is made in this case).
+        return me.argList.map(k=>D.argParser(data[k]));
+    };//}}}
     function src2tpl(src) { // Ensures sqltt instance{{{
         if ( // Allow source too:
             typeof src.sql == "function"
@@ -102,17 +108,16 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         const eng = engine.resolve(me, engName);
         if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
         const qtpl = me.getSource(eng.flavour).sql;
-
         const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)));
         me.sqlCache[eng.name] = outSql;
         return outSql.replace(D.re_rowtrim, "");
     };//}}}
-    sqltt.prototype.args = function args(data = {}) {//{{{
+    sqltt.prototype.args = function args(raw = {}) {//{{{
         const me = this;
-        if (data instanceof Array) return data;
-            // Accept regular positional parameters too
-            // (No check is made in this case).
-        return me.argList.map(k=>D.argParser(data[k]));
+        const rendered = argsRender(me, raw);
+        const dbg = me[D.sym_options].debug;
+        if (dbg) hlp.queryDebugLog(dbg, {raw, rendered}, me.getSource());
+        return rendered;
     };//}}}
     sqltt.prototype.concat = function concat(str) {//{{{
         const me = this;
