@@ -230,12 +230,39 @@ describe('sqltt class', function() {
                 );
             }//}}}
 
+            { m = "Deep inclusion works";//{{{
+
+                assert.doesNotThrow(function() {//{{{
+                    const a = new sqltt('a');
+                    const b = new sqltt($=>$`${a} b`);
+                    const c = new sqltt($=>$`${b} c`);
+                    const d = new sqltt($=>$`${c} d`);
+                    const e = new sqltt($=>$`${d} e`);
+                    const f = new sqltt($=>$`${e} f`);
+                    const g = new sqltt($=>$`${f} g`);
+                    const h = new sqltt($=>$`${g} h`);
+                    const i = new sqltt($=>$`${h} i`);
+                    const j = new sqltt($=>$`${i} j`);
+                    const k = new sqltt($=>$`${j} k`);
+                    const l = new sqltt($=>$`${k} l`);
+                    const m = new sqltt($=>$`${l} m`);
+                    const n = new sqltt($=>$`${m} n`);
+                    const o = new sqltt($=>$`${n} o`);
+                    const p = new sqltt($=>$`${o} p`);
+                    const q = new sqltt($=>$`${p} q`);
+                    const r = new sqltt($=>$`${q} r`);
+                    const s = new sqltt($=>$`${r} s`);
+                    const t = new sqltt($=>$`${s} t`);
+                    const u = new sqltt($=>$`${t} u`);
+                    const v = new sqltt($=>$`${u} v`);
+                    const w = new sqltt($=>$`${v} w`);
+                    const x = new sqltt($=>$`${w} x`);
+                    const z = new sqltt($=>$`${x} z`);
+                });//}}}
+
+            }//}}}
 
         });
-
-
-
-
 
     });
 
