@@ -354,9 +354,9 @@ Table of Contents
             * [2. Implement *wrapStr* additional argument](#2-implement-wrapstr-additional-argument)
             * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
             * [4. Enhance CLI functionality with mutations](#4-enhance-cli-functionality-with-mutations)
-            * [5. Implement CTE "dependency" system](#5-implement-cte-dependency-system)
-            * [6. Add .options() methods to .publish() exports](#6-add-options-methods-to-publish-exports)
-            * [N. Update documentation](#n-update-documentation)
+            * [5. Update documentation](#5-update-documentation)
+        * [Implement CTE "dependency" system](#implement-cte-dependency-system)
+        * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
     * [Engines](#engines)
@@ -483,6 +483,8 @@ SQLTT-1.0.0 soon.
 
   * Implement --all to render all defined templates.
     - Precede each one with a comment showing its name.
+    - Implement it by multiple inclusion, so that arguments will be declared
+      globally on top.
 
 #### Implement Mutable Queries
 
@@ -597,7 +599,18 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 
 <!-- }}} -->
 
-##### 5. Implement CTE "dependency" system
+##### 5. Update documentation
+
+<!-- {{{ -->
+
+Update documentation with that functionalities.
+
+Remember to consider examples for GraphQL APIs implementations.
+
+<!-- }}} -->
+
+
+#### Implement CTE "dependency" system
 
 <!-- {{{ -->
 
@@ -628,8 +641,7 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 
 <!-- }}} -->
 
-
-##### 6. Add .options() methods to .publish() exports
+#### Add .options() methods to .publish() exports
 
 <!-- {{{ -->
   * Not enumerable.
@@ -638,15 +650,6 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
   (Not strictly necessary for 1.0.0, but maybe...)
 <!-- }}} -->
 
-##### N. Update documentation
-
-<!-- {{{ -->
-
-Update documentation with that functionalities.
-
-Remember to consider examples for GraphQL APIs implementations.
-
-<!-- }}} -->
 
 FEATURES
 --------
