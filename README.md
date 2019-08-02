@@ -150,7 +150,12 @@ selection:
 **$ ``node personnel.sql.js``**
 
 ```sh
-Available queries: list, listByDept, show, insert, update
+Available queries:
+  ✓ list:  (Undocumented)
+  ✓ listByDept:  (Undocumented)
+  ✓ show:  (Undocumented)
+  ✓ insert:  (Undocumented)
+  ✓ update:  (Undocumented)
 ```
 
 > 📌 If single SQLTT template where published in that file, we would had got
@@ -208,6 +213,30 @@ command line arguments:
 ```
 
 <!-- }}} -->
+
+
+#### Types and quoting
+
+In cli-mode we have no way to precisely determine which type is each argument
+and hence neither which would be the correct quoting to use.
+
+To overcome it, following convention is used:
+
+  * When it is enclosed by single or double quotes, it is a character-based type (string).
+    - Note that those quotes **need to avoid shell escapping**. I.E.: ``"'This
+      is a string'"``.
+
+  * When unquoted:
+
+    - 'null' (Case insensitive) stands for NULL.
+
+    - 'true' (Case insensitive) stands for boolean true.
+
+    - 'null' (Case insensitive) stands for boolean true.
+
+    - Valid numeric value stands for Number.
+
+    - Else case, it is supposed to be a string, even unquoted.
 
 
 ### Using from NodeJS application
