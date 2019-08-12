@@ -121,18 +121,13 @@ const sqltt = (function(){ // Sql Tagged Template Engine
     };//}}}
     sqltt.prototype.concat = function concat(str) {//{{{
         const me = this;
-        return Object.assign(
-            Object.create(Object.getPrototypeOf(me))
-            , me
-            , { sql: (...args) => me.sql(...args) + str }
-        );
+        const clone = hlp.clone(me);
+        clone.sql = (...args) => me.sql(...args) + str;
+        return clone;
     };//}}}
     sqltt.prototype.options = function concat(opts) {//{{{
         const me = this;
-        const clone = Object.assign(
-            Object.create(Object.getPrototypeOf(me))
-            , me
-        );
+        const clone = hlp.clone(me);
         clone[D.sym_options] = {...me[D.sym_options], ...opts};
         return clone;
     };//}}}
