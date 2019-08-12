@@ -551,10 +551,10 @@ tpl.getUserData = new sqltt({
 
 ##### 2. Implement *wrapStr* additional argument
 
-<!-- {{{ -->
+<!-- {{{ (DONE) -->
 
-Implement *wrapStr* additional argument at least for .keys(), .values(),
-.entries() and .arg().
+Implement *wrapStr* additional argument at least for .keys(), .values() and
+.entries().
 
 It will provide a simple wrapping string (see previous example) that will be
 applied only if that method renders something.

@@ -35,7 +35,7 @@ q.insert = new sqltt({
     },
     sql: /* @@sql@@ */ $=>$`
         insert into articles (${$.keys($.data('columns'))})
-        values (${$.values($.data('columns'))})
+        ${$.values($.data('columns'), ', ', "values (%)")}
     `, /* @@/sql@@ */
 }, {debug: true});
 
@@ -52,7 +52,7 @@ q.update = new sqltt({
         columns: {sectionId: 'sectionId', title: 'title', body: 'contents'},
     },
     sql: /* @@sql@@ */ $=>$`
-        update articles set ${$.entries($.data('columns'))}
+        update articles ${$.entries($.data('columns'), undefined, 'set')}
         where id = ${"id"}
     `, /* @@/sql@@ */
 });
