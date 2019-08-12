@@ -519,7 +519,7 @@ SQLTT-1.0.0 soon.
 
 ##### 1. Implement .data(key) Tag API method
 
-<!-- {{{ -->
+<!-- {{{ (DONE) -->
 
 It will give access to data declared in *data* key from template source and
 will be able to be used from other methods such as .entries() to access data
@@ -530,11 +530,11 @@ defined inside the template.
 ```javascript
 tpl.getUserData = new sqltt({
     data: {
-        args: ["id", "name", "sex", "birth", "ctime"],
+        columns: ["id", "name", "sex", "birth", "ctime"],
         fliter: ["name"],
     },
     sql: $=>$`
-        select ${$.arg($.data("args"))}
+        select ${$.arg($.data("columns"))}
         from users
         ${$.entries($.data("filter"), "and", "where %")}
         // For the third .entries() parameter see next TODO

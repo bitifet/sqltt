@@ -26,19 +26,20 @@ q.show = new sqltt( /* @@sql@@ */ $=>$`
 ` /* @@/sql@@ */);
 
 
-const fieldsArr = ['sectionId', 'title', 'body'];
 q.insert = new sqltt({
     name: "ArticleInsert",
     description: "Perform an Insert.",
     args: ["title", "body", "sectionId"],
+    data: {
+        columns: ['sectionId', 'title', 'body'],
+    },
     sql: /* @@sql@@ */ $=>$`
-        insert into articles (${$.keys(fieldsArr)})
-        values (${$.values(fieldsArr)})
+        insert into articles (${$.keys($.data('columns'))})
+        values (${$.values($.data('columns'))})
     `, /* @@/sql@@ */
 }, {debug: true});
 
 
-const fieldsObj = {sectionId: 'sectionId', title: 'title', body: 'contents'};
 q.update = new sqltt({
     description: "Perform an update.",
     args: {
@@ -47,8 +48,11 @@ q.update = new sqltt({
         "contents": "Article contents",
         "sectionId": "Related section id",
     },
+    data: {
+        columns: {sectionId: 'sectionId', title: 'title', body: 'contents'},
+    },
     sql: /* @@sql@@ */ $=>$`
-        update articles set ${$.entries(fieldsObj)}
+        update articles set ${$.entries($.data('columns'))}
         where id = ${"id"}
     `, /* @@/sql@@ */
 });
