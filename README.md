@@ -591,11 +591,15 @@ this case).
 
 ##### 4. Implement .data() "presets"
 
+<!-- {{{ (DONE) -->
+
 Modify .data() Template API method so that if provided dataPatch is an array or
 a string of comma separated keys instead of an object, it will check for a
 "presets" prooperty in template source and then for every specified key.
 
 Then, those objects will all be applied as data patches.
+
+<!-- }}} -->
 
 
 ##### 5. Enhance CLI functionality with mutations

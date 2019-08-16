@@ -11,6 +11,10 @@ q.list = new sqltt({
     data: {
         columns: ["id", "sectionName", "title"],
     },
+    presets: {
+        detailed: {columns: ["id", "sectionName", "title", "autor", "brief", "ctime", "mtime"]},
+        bySection: {filters: ["sectionId"]},
+    },
     sql: /* @@sql@@ */ $=>$`
         select ${$.data("columns")}
         from articles
@@ -19,17 +23,16 @@ q.list = new sqltt({
     `, /* @@/sql@@ */
 })
 
-q.listDetailed = q.list
-    .data({
-        columns: ["id", "sectionName", "title", "autor", "brief", "ctime", "mtime"],
-    })
-;
+// q.listDetailed = q.list
+//     .data({
+//         columns: ["id", "sectionName", "title", "autor", "brief", "ctime", "mtime"],
+//     })
+// ;
 
-q.listBySection = q.list
-    .data({
-        filters: ["sectionId"],
-    })
-;
+q.listDetailed = q.list.data("detailed");
+q.listBySection = q.list.data("bySection");
+q.listDetailedBySection = q.list.data("detailed, bySection");
+
 
 
 q.show = new sqltt( /* @@sql@@ */ $=>$`
