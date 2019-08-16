@@ -382,8 +382,9 @@ Table of Contents
             * [1. Implement .data(key) Tag API method](#1-implement-datakey-tag-api-method)
             * [2. Implement *wrapStr* additional argument](#2-implement-wrapstr-additional-argument)
             * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
-            * [4. Enhance CLI functionality with mutations](#4-enhance-cli-functionality-with-mutations)
-            * [5. Update documentation](#5-update-documentation)
+            * [4. Implement .data() "presets"](#4-implement-data-presets)
+            * [5. Enhance CLI functionality with mutations](#5-enhance-cli-functionality-with-mutations)
+            * [6. Update documentation](#6-update-documentation)
         * [Implement CTE "dependency" system](#implement-cte-dependency-system)
         * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
 * [FEATURES](#features)
@@ -421,8 +422,8 @@ Table of Contents
         * [concat(str)](#concatstr)
         * [options(optsObject)](#optionsoptsobject)
     * [Tag API](#tag-api)
-        * [arg(argName, alias)](#argargname-alias)
-        * [include(src [, bindings])](#includesrc-bindings)
+        * [arg()](#arg)
+        * [include()](#include)
         * [keys(), values() and entries()](#keys-values-and-entries)
         * [literal(str)](#literalstr)
         * [data(str)](#datastr)
@@ -567,19 +568,19 @@ rendered so, executing that query, all rows would be returned.
 
 ##### 3. Implement .data() Template API method
 
-<!-- {{{ -->
+<!-- {{{ (DONE) -->
 
 After previous step, we can implement new Template API method with the same
-name (*.data()*).
+name (*.data(patch)*).
 
-This method will return a new instance of the template with its *data*
-attribute changed.
+This method will return a new instance of the template with its template *data*
+property patched.
 
-It will work in three ways:
+SYNTAX: ``myTpl.data(dataPatch)``
 
-  * ``myTpl.data(key, value)`` where only specified key will be changed.
-  * ``myTpl.data(newData)`` where newData entries will replace existing ones.
-  * ``myTpl.data(newData, true)`` where whole data property will be replaced.
+Everey newData entry will replace existing one.
+
+To remove existing entries, they can be set to null, or undefined.
 
 This third piece will allow us to "mutate" queries by specifying different
 column list to show or filters to apply (required arguments would change in
@@ -587,7 +588,17 @@ this case).
 
 <!-- }}} -->
 
-##### 4. Enhance CLI functionality with mutations
+
+##### 4. Implement .data() "presets"
+
+Modify .data() Template API method so that if provided dataPatch is an array or
+a string of comma separated keys instead of an object, it will check for a
+"presets" prooperty in template source and then for every specified key.
+
+Then, those objects will all be applied as data patches.
+
+
+##### 5. Enhance CLI functionality with mutations
 
 <!-- {{{ -->
 
@@ -628,7 +639,7 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 
 <!-- }}} -->
 
-##### 5. Update documentation
+##### 6. Update documentation
 
 <!-- {{{ -->
 
@@ -1304,7 +1315,7 @@ targetted database engine.
 > 📌 Further examples will follow PostgreSQL syntax unless otherwise said.
 
 
-#### arg(argName, alias)
+#### arg()
 
 <!-- {{{ -->
 
@@ -1314,13 +1325,18 @@ Argument names can be repeated. They will be rendered in apparition order when
 [args() Template API meghod](#argsargdata) called unless different order were
 specified through [args property](#arguments-declaration) in template source.
 
+**📝 SYNTAX:**
 
-**📝 Parameters:**
+```javascript
+arg(argName[, alias])
+```
+
+**🗃️ PARAMETERS:**
 
   * *argName:* Argument name.
   * *alias:* (Optional) Alias.
 
-**🏃 Shorthand:**
+**🏃 SHORTHAND:**
 
 In its simplest form (when *argName* is string and *alias* is not provided)
 simple string can be used as a *shorthand*.
@@ -1331,7 +1347,7 @@ simple string can be used as a *shorthand*.
 >   * Using shorthand: `${"argName"}` ➡  `$argName`.
 
 
-**🚀 Enhnanced Behaviour:**
+**🚀 ENHNANCED BEHAVIOUR:**
 
   * If *alias* is provided, it is added after argument interpolation.
 
@@ -1376,18 +1392,24 @@ simple string can be used as a *shorthand*.
 
 <!-- }}} -->
 
-#### include(src [, bindings])
+#### include()
 
 <!-- {{{ -->
 
 Provide the ability to nest other templates. 
 
-**📝 Parameters:**
+**📝 SYNTAX:**
+
+```javascript
+include(src [, bindings])
+```
+
+**🗃️ PARAMETERS:**
 
   * *src:* SQLTT instance or any valid SQLTT source (including raw string).
   * *bindings:* (Optional) Argument bindings.
 
-**🏃 Shorthand:**
+**🏃 SHORTHAND:**
 
 If *src* is an already instantiated SQLTT template and no bindings are needed,
 you don't need to use *.include()* at all.
@@ -1410,16 +1432,23 @@ you don't need to use *.include()* at all.
 >     baz = $baz`.
 
 
-**🚀 Enhnanced Behaviour:**
+**🚀 ENHNANCED BEHAVIOUR:**
 
 
-**🗂️ Examples:**
+**🗂️ EXAMPLES:**
 
 <!-- }}} -->
 
 
 #### keys(), values() and entries()
 
+**📝 SYNTAX:**
+
+```javascript
+    keys(argSpec [, sep [, wrapStr]])
+    values(argSpec [, sep [, wrapStr]])
+    entries(argSpec [, sep [, wrapStr]])
+```
 
 
 #### literal(str)

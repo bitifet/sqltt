@@ -131,6 +131,16 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         clone[D.sym_options] = {...me[D.sym_options], ...opts};
         return clone;
     };//}}}
+    sqltt.prototype.data = function data(newData = {}) {//{{{
+        const me = this;
+        const clone = hlp.clone(me);
+        clone.source = hlp.clone(me.source);
+        clone.source.data = Object.assign({}
+            , clone.source.data || {}
+            , newData
+        );
+        return clone;
+    };//}}}
 
 
     // Static mehtods and properties:

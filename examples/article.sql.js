@@ -7,16 +7,30 @@ const sqltt = require("../"); // sqltt
 // Define multiple named query templates.
 const q = {};
 
-q.list = new sqltt( /* @@sql@@ */ `
-    select id, sectionName, title
-    from articles
-    join sections using(sectionId)
-` /* @@/sql@@ */);
+q.list = new sqltt({
+    data: {
+        columns: ["id", "sectionName", "title"],
+    },
+    sql: /* @@sql@@ */ $=>$`
+        select ${$.data("columns")}
+        from articles
+        join sections using(sectionId)
+        ${$.entries($.data("filters"), "and", "where")}
+    `, /* @@/sql@@ */
+})
 
-q.listBySection = new sqltt( /* @@sql@@ */ $=>$`
-    ${$.include(q.list)}
-    where sectionId = ${$.arg("sectionId")}
-` /* @@/sql@@ */);
+q.listDetailed = q.list
+    .data({
+        columns: ["id", "sectionName", "title", "autor", "brief", "ctime", "mtime"],
+    })
+;
+
+q.listBySection = q.list
+    .data({
+        filters: ["sectionId"],
+    })
+;
+
 
 q.show = new sqltt( /* @@sql@@ */ $=>$`
     select id, sectionName, title, body
