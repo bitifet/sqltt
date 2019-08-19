@@ -23,18 +23,6 @@ q.list = new sqltt({
     `, /* @@/sql@@ */
 })
 
-// q.listDetailed = q.list
-//     .data({
-//         columns: ["id", "sectionName", "title", "autor", "brief", "ctime", "mtime"],
-//     })
-// ;
-
-q.listDetailed = q.list.data("detailed");
-q.listBySection = q.list.data("bySection");
-q.listDetailedBySection = q.list.data("detailed, bySection");
-
-
-
 q.show = new sqltt( /* @@sql@@ */ $=>$`
     select id, sectionName, title, body
     from articles

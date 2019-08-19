@@ -384,7 +384,9 @@ Table of Contents
             * [3. Implement .data() Template API method](#3-implement-data-template-api-method)
             * [4. Implement .data() "presets"](#4-implement-data-presets)
             * [5. Enhance CLI functionality with mutations](#5-enhance-cli-functionality-with-mutations)
-            * [6. Update documentation](#6-update-documentation)
+                * [5.1 Allow presets too](#51-allow-presets-too)
+            * [6. Allow multiple mutations](#6-allow-multiple-mutations)
+            * [7. Update documentation](#7-update-documentation)
         * [Implement CTE "dependency" system](#implement-cte-dependency-system)
         * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
 * [FEATURES](#features)
@@ -532,12 +534,12 @@ defined inside the template.
 tpl.getUserData = new sqltt({
     data: {
         columns: ["id", "name", "sex", "birth", "ctime"],
-        fliter: ["name"],
+        filters: ["name"],
     },
     sql: $=>$`
         select ${$.arg($.data("columns"))}
         from users
-        ${$.entries($.data("filter"), "and", "where %")}
+        ${$.entries($.data("filters"), "and", "where %")}
         // For the third .entries() parameter see next TODO
     `,
 });
@@ -546,7 +548,7 @@ tpl.getUserData = new sqltt({
 > ...Additionally, methods that currently doesn't accept string as its first
 > argument, would be modified to automatically call .data() with it when string
 > were provided. This way, previous call to *.entries()* could be simplified as
-> ``$.entries("filter", "and", "where %")``.
+> ``$.entries("filters", "and", "where %")``.
 
 <!-- }}} -->
 
@@ -560,7 +562,7 @@ Implement *wrapStr* additional argument at least for .keys(), .values() and
 It will provide a simple wrapping string (see previous example) that will be
 applied only if that method renders something.
 
-This way, if in previous example, *filter* were had been an empty array even
+This way, if in previous example, *filters* were had been an empty array even
 the *where* clause (provided through this wrapping argument) weren't got
 rendered so, executing that query, all rows would be returned.
 
@@ -588,7 +590,6 @@ this case).
 
 <!-- }}} -->
 
-
 ##### 4. Implement .data() "presets"
 
 <!-- {{{ (DONE) -->
@@ -597,14 +598,13 @@ Modify .data() Template API method so that if provided dataPatch is an array or
 a string of comma separated keys instead of an object, it will check for a
 "presets" prooperty in template source and then for every specified key.
 
-Then, those objects will all be applied as data patches.
+Next, those objects will all be applied as data patches.
 
 <!-- }}} -->
 
-
 ##### 5. Enhance CLI functionality with mutations
 
-<!-- {{{ -->
+<!-- {{{ (DONE) -->
 
 Extend CLI controller so that, in multitemplate case, when addressing a temlate
 (such as 'list') we could add a literal *data* specification in parentheses
@@ -618,20 +618,20 @@ queries would be merged in single one:
 tpl.list = new sqltt({
     data: {
         args: ["id", "dptName", "name"],
-        filter: [],
+        // filters: [], // Non declared data sets defaults to empty array.
     },
     sql: $=>`
         select ${$.arg($.data("args"))}
         from personnel
         join depts using(dptId)
-        ${$.entries($.data("filter"), "and", "where %")}
+        ${$.entries($.data("filters"), "and", "where %")}
     `,
 });
 ```
 
 Now, to get previously named *listByDept* query from CLI, we just need to run:
 
-**$ ``node personnel.sql.js 'list({filter: ["dptId"]})' | psql tiaDB``**
+**$ ``node personnel.sql.js 'list({filters: ["dptId"]})' | psql tiaDB``**
 
 ```sh
  id | dptid |  dptname   |   name    | sex
@@ -643,7 +643,73 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 
 <!-- }}} -->
 
-##### 6. Update documentation
+###### 5.1 Allow presets too
+
+<!-- {{{ (DONE) -->
+
+Consider now this slight modification of prevous example.
+
+```javascript
+tpl.list = new sqltt({
+    data: {
+        args: ["id", "dptid", "dptname", "name", "sex"],
+    },
+    presets: {
+        detailed: {columns: ["id", "dptId", "dptName", "name", "sex", "ctime"]},
+        bySection: {filters: ["dptId"]},
+    },
+    sql: $=>`
+        select ${$.arg($.data("args"))}
+        from personnel
+        join depts using(dptId)
+        ${$.entries($.data("filters"), "and", "where %")}
+    `,
+});
+```
+
+Presets should be allowed from cli-mode too just invoking them by its name, so
+now we could simply had done:
+
+**$ ``node personnel.sql.js 'list(bySection)' | psql tiaDB``**
+
+```sh
+ id | dptid |  dptname   |   name    | sex
+----+-------+------------+-----------+-----
+  2 | oper  | Operations | Mortadelo | m
+  3 | oper  | Operations | Filemon   | m
+(2 rows)
+```
+
+> 📌 Since `.data()` accepts multiple presets, we could also pick more than one
+> preset:
+> 
+> **$ ``node personnel.sql.js 'list(bySection,detailed)' | psql tiaDB``**
+> 
+> ```sh
+>  id |   name    | sex | dptName        |   birth    |           ctime
+> ----+-----------+-----+----------------+------------+----------------------------
+>   1 | Mortadelo | m   | Operations     | 1969-03-10 | 2019-05-31 10:58:09.346467
+>   2 | Filemon   | m   | Operations     | 1965-08-15 | 2019-05-31 10:58:46.291629
+> ```
+
+<!-- }}} -->
+
+##### 6. Allow multiple mutations
+
+<!-- {{{ -->
+
+  * Modify ``.data()`` Template API method so that it accept any number of
+    arguments.
+    - That arguments could be both preset names or data patches to apply.
+    - They will be applied in order.
+    - Also a null value could be specified in order to fully reset data object.
+
+  * Modify cli-mode mutation specification in order to allow to combine preset
+    names with data patches in the same way.
+
+<!-- }}} -->
+
+##### 7. Update documentation
 
 <!-- {{{ -->
 
