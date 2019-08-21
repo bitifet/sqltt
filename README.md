@@ -522,7 +522,7 @@ SQLTT-1.0.0 soon.
 
 ##### 1. Implement .data(key) Tag API method
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 It will give access to data declared in *data* key from template source and
 will be able to be used from other methods such as .entries() to access data
@@ -554,7 +554,7 @@ tpl.getUserData = new sqltt({
 
 ##### 2. Implement *wrapStr* additional argument
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 Implement *wrapStr* additional argument at least for .keys(), .values() and
 .entries().
@@ -570,7 +570,7 @@ rendered so, executing that query, all rows would be returned.
 
 ##### 3. Implement .data() Template API method
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 After previous step, we can implement new Template API method with the same
 name (*.data(patch)*).
@@ -592,7 +592,7 @@ this case).
 
 ##### 4. Implement .data() "presets"
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 Modify .data() Template API method so that if provided dataPatch is an array or
 a string of comma separated keys instead of an object, it will check for a
@@ -604,7 +604,7 @@ Next, those objects will all be applied as data patches.
 
 ##### 5. Enhance CLI functionality with mutations
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 Extend CLI controller so that, in multitemplate case, when addressing a temlate
 (such as 'list') we could add a literal *data* specification in parentheses
@@ -645,7 +645,7 @@ Now, to get previously named *listByDept* query from CLI, we just need to run:
 
 ###### 5.1 Allow presets too
 
-<!-- {{{ (DONE) -->
+<!-- {{{ --> (DONE)
 
 Consider now this slight modification of prevous example.
 
@@ -702,7 +702,12 @@ now we could simply had done:
     arguments.
     - That arguments could be both preset names or data patches to apply.
     - They will be applied in order.
-    - Also a null value could be specified in order to fully reset data object.
+    - ...and every key will be MERGED (concatenated in case of Arrays) instead of replaces.
+    - Keys with null values will be resetted:
+      - Current effect of ``.data({foo: {bar: "baz"}})``.
+      - ...will be ``.data({foo: null}, {foo: {bar: "baz"}})``.
+      - ...otherwise previous and non overwritten *foo* data would be preserved.
+    - A global null value (``.data(null [, ...])``) will fully reset whole data object.
 
   * Modify cli-mode mutation specification in order to allow to combine preset
     names with data patches in the same way.
