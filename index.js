@@ -1,11 +1,12 @@
 "use strict";
 const D = require("./lib/definitions");
+const _priv_ = D.sym_private;
 const hlp = require("./lib/helpers");
 const engine = require("./lib/engines");
 const interpolation = require("./lib/interpolation");
 const argCompiler = require("./lib/argCompiler");
-const sqlCompiler = require("./lib/sqlCompiler");
-const isCli = m=>(! m.parent || D.emulateCli);
+const publicMethods = require("./lib/tplAPI.js");
+const staticMethods = require("./lib/staticAPI.js");
 
 const sqltt = (function(){ // Sql Tagged Template Engine
 
@@ -24,7 +25,7 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         const argList = hlp.sortArgs(
             Object.keys(argSpc)
             , typeof tplArgs == "object" ? tplArgs : []
-            , me[D.sym_options].check_arguments
+            , me[_priv_].options.check_arguments
         );
         return [argSpc, argList];
     };//}}}
@@ -63,132 +64,24 @@ const sqltt = (function(){ // Sql Tagged Template Engine
         };
 
     };//}}}
-    function argsRender(me, data = {}) {//{{{
-        if (data instanceof Array) return data;
-            // Accept regular positional parameters too
-            // (No check is made in this case).
-        return me.argList.map(k=>D.argParser(data[k]));
-    };//}}}
-    function src2tpl(src) { // Ensures sqltt instance{{{
-        if ( // Allow source too:
-            typeof src.sql == "function"
-            && ! src.getSource // sqltt objects has a sql() function too...
-        ) {
-            src = new sqltt(src);
-        };
-        return src;
-    };//}}}
-    const cliMode = (...args)=>require("./lib/cli_mode").bind(sqltt)(...args);
-
 
     // Constructor:
-    // ------------
-
-    function sqltt(sourceTpl, options = {}) {//{{{
+    function sqltt(sourceTpl, options = {}) {
         const me = this;
+        me[_priv_] = {};
         me.version = D.version;
-        me[D.sym_options] = options;
+        me[_priv_].options = options;
         loadTemplate(me, sourceTpl);
         checkTemplate(me);
         me.sqlCache = {};
-    };//}}}
-
+    };
 
     // Public methods:
-    // ---------------
-
-    sqltt.prototype.getSource = function getSource(engFlav) {//{{{
-        const me = this;
-        const src = Object.assign({}, me.source);
-        if (engFlav && src.altsql && src.altsql[engFlav]) src.sql = src.altsql[engFlav];
-        return src;
-    };//}}}
-    sqltt.prototype.sql = function sql(engName) {//{{{
-        const me = this;
-        const eng = engine.resolve(me, engName);
-        if (me.sqlCache[eng.name] !== undefined) return me.sqlCache[eng.name];
-        const qtpl = me.getSource(eng.flavour).sql;
-        const outSql = eng.sqlWrapper.bind(me)(qtpl(new sqlCompiler(me, eng)));
-        me.sqlCache[eng.name] = outSql;
-        return outSql.replace(D.re_rowtrim, "");
-    };//}}}
-    sqltt.prototype.args = function args(raw = {}) {//{{{
-        const me = this;
-        const rendered = argsRender(me, raw);
-        const dbg = me[D.sym_options].debug;
-        if (dbg) hlp.queryDebugLog(dbg, {raw, rendered}, me.getSource());
-        return rendered;
-    };//}}}
-    sqltt.prototype.concat = function concat(str) {//{{{
-        const me = this;
-        const clone = hlp.clone(me);
-        clone.sql = (...args) => me.sql(...args) + str;
-        return clone;
-    };//}}}
-    sqltt.prototype.options = function concat(opts) {//{{{
-        const me = this;
-        const clone = hlp.clone(me);
-        clone[D.sym_options] = {...me[D.sym_options], ...opts};
-        return clone;
-    };//}}}
-    sqltt.prototype.data = function data(dataPatch = {}) {//{{{
-        const me = this;
-        const clone = hlp.clone(me);
-        clone.source = hlp.clone(me.source);
-        const presets = clone.source.presets || [];
-
-        if (typeof dataPatch == "string") dataPatch = dataPatch.split(/\s*,\s*/);
-        if (dataPatch instanceof Array) {
-            if (! Object.keys(presets).length) throw "No data presets defined.";
-            if (! dataPatch.length) throw "No data presets specified.";
-            dataPatch = dataPatch.map(function(key){
-                const p = presets[key];
-                if (p === undefined) throw "Preset " + key + " not defined.";
-                return p
-            });
-            dataPatch = Object.assign.apply(null, [{}, ...dataPatch]);
-        };
-
-        clone.source.data = Object.assign({}
-            , clone.source.data || {}
-            , dataPatch
-        );
-        return clone;
-    };//}}}
+    Object.assign(sqltt.prototype, publicMethods);
 
 
     // Static mehtods and properties:
-    // ---------------
-
-    sqltt.version = D.version;
-    sqltt.publish = function publish(module, qSrc, options) {//{{{
-
-        // Allow to use global options specially for multi-template files:
-        if (options !== undefined) {
-            if (qSrc instanceof sqltt) {
-                qSrc = qSrc.options(options);
-            } else {
-                Object.keys(qSrc).map(function(key) {
-                    return qSrc[key]=qSrc[key] instanceof Array
-                        ? qSrc[key].map(q=>q.options(options))
-                        : qSrc[key].options(options)
-                    ;
-                });
-            };
-        };
-
-        // NOTE:
-        // Arrays of templates are allowed in order to specify multiple queries
-        // expected to execute in single transaction. Specially in databases
-        // like Oracle which doesn't support complex CTE's.
-
-        // Export for library usage:
-        module.exports = qSrc;
-
-        // CLI usage:
-        if (isCli(module)) cliMode(qSrc);
-
-    };//}}}
+    Object.assign(sqltt, staticMethods);
 
     return sqltt;
 
