@@ -1,42 +1,32 @@
+// ==================== //
+// Sql Tagged Templates //
+// ==================== //
 "use strict";
 const D = require("./lib/definitions");
 const _priv_ = D.sym_private;
-const hlp = require("./lib/helpers");
-const engine = require("./lib/engines");
-const interpolation = require("./lib/interpolation");
-const argCompiler = require("./lib/argCompiler");
 const privateMethods = require("./lib/privateMethods.js");
 const publicMethods = require("./lib/tplAPI.js");
 const staticMethods = require("./lib/staticAPI.js");
 
-const sqltt = (function(){ // Sql Tagged Template Engine
+// Constructor:
+function sqltt(sourceTpl, options = {}) {
+    const me = this;
+    me.version = D.version;
+    me[_priv_] = {};
+    me[_priv_].options = options;
+    Object.entries(privateMethods).map( // Kinda private methods
+        ([k,v])=>me[_priv_][k]=v.bind(me)
+    );
+    me[_priv_].loadTemplate(sourceTpl);
+    me[_priv_].checkTemplate();
+    me.sqlCache = {};
+};
 
-    // Private functions:
-    // ------------------
+// Public methods:
+Object.assign(sqltt.prototype, publicMethods);
 
-    // Constructor:
-    function sqltt(sourceTpl, options = {}) {
-        const me = this;
-        me.version = D.version;
-        me[_priv_] = {};
-        me[_priv_].options = options;
-        Object.entries(privateMethods).map( // Kinda private methods
-            ([k,v])=>me[_priv_][k]=v.bind(me)
-        );
-        me[_priv_].loadTemplate(sourceTpl);
-        me[_priv_].checkTemplate();
-        me.sqlCache = {};
-    };
-
-    // Public methods:
-    Object.assign(sqltt.prototype, publicMethods);
-
-    // Static mehtods and properties:
-    Object.assign(sqltt, staticMethods);
-
-    return sqltt;
-
-})();
+// Static mehtods and properties:
+Object.assign(sqltt, staticMethods);
 
 module.exports = sqltt;
 
