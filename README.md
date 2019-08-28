@@ -386,7 +386,8 @@ Table of Contents
             * [5. Enhance CLI functionality with mutations](#5-enhance-cli-functionality-with-mutations)
                 * [5.1 Allow presets too](#51-allow-presets-too)
             * [6. Allow multiple mutations](#6-allow-multiple-mutations)
-            * [7. Update documentation](#7-update-documentation)
+            * [7. Even more functionality](#7-even-more-functionality)
+            * [8. Update documentation](#8-update-documentation)
         * [Implement CTE "dependency" system](#implement-cte-dependency-system)
         * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
 * [FEATURES](#features)
@@ -617,11 +618,11 @@ queries would be merged in single one:
 ```javascript
 tpl.list = new sqltt({
     data: {
-        args: ["id", "dptName", "name"],
+        columns: ["id", "dptName", "name"],
         // filters: [], // Non declared data sets defaults to empty array.
     },
     sql: $=>`
-        select ${$.arg($.data("args"))}
+        select ${$.arg($.data("columns"))}
         from personnel
         join depts using(dptId)
         ${$.entries($.data("filters"), "and", "where %")}
@@ -652,14 +653,14 @@ Consider now this slight modification of prevous example.
 ```javascript
 tpl.list = new sqltt({
     data: {
-        args: ["id", "dptid", "dptname", "name", "sex"],
+        columns: ["id", "dptid", "dptname", "name", "sex"],
     },
     presets: {
         detailed: {columns: ["id", "dptId", "dptName", "name", "sex", "ctime"]},
         bySection: {filters: ["dptId"]},
     },
     sql: $=>`
-        select ${$.arg($.data("args"))}
+        select ${$.arg($.data("columns"))}
         from personnel
         join depts using(dptId)
         ${$.entries($.data("filters"), "and", "where %")}
@@ -714,7 +715,68 @@ now we could simply had done:
 
 <!-- }}} -->
 
-##### 7. Update documentation
+##### 7. Even more functionality
+
+<!-- {{{ -->
+
+7.1 Rename .data() method to .mutation()
+
+7.2 Implement a new (and simpler) .data() method which just replaces whole
+    *data* property (semi-backward compatibility).
+
+7.3 Enhance .mutation method in order to allow presets to be callbacks
+    returning the actual mutation.
+    - Those callbackw would accept parameters too, that could be passed ussing
+      function-like syntax too.
+    - They will also be bounded to the tag function so Tag API methods will be
+      available though `this`.
+
+**🗂️ Example:**
+
+```javascript
+tpl.list = new sqltt({
+    presets: {
+        page: function(num, itemsPerPage = 10) {
+            const $ = this;  // Tag API
+            if (num === undefined) return { // Render them as parameters.
+                offset: $.arg("offset"),
+                limit: $.arg("limit"),
+            };
+            if (num === null) return {}; // No offset or limit rendered at all.
+            // Use specified literals otherwise:
+            return {
+                offset: num * itemsPerPage,
+                limit: itemsPerPage,
+            };
+        },
+    },
+    sql: $=>`
+        select * from personnel
+        ${$.keys($.data("offset"), $.default, "order by %")}
+        ${$.keys($.data("limit"), $.default, "limit %")}
+
+    `,
+});
+```
+
+```javascript
+myQuery.sql();
+    // select * from personnel;
+myQuery.mutation('page(null)').sql();
+    // select * from personnel;
+myQuery.mutation('page(20)').sql();
+    // select * from personnel offset 200 limit 10;
+myQuery.mutation('page(3, 50)').sql();
+    // select * from personnel offset 150 limit 50;
+myQuery.mutation('page(null)').sql();
+    // select * from personnel;
+myQuery.mutation('page()').sql();
+    // select * from personnel offset $1 limit $2;
+```
+
+<!-- }}} -->
+
+##### 8. Update documentation
 
 <!-- {{{ -->
 
@@ -723,7 +785,6 @@ Update documentation with that functionalities.
 Remember to consider examples for GraphQL APIs implementations.
 
 <!-- }}} -->
-
 
 #### Implement CTE "dependency" system
 
@@ -1539,7 +1600,7 @@ internally by other *Tag API* functions.
 
 But it can also be useful in case we need to insert some calculated substring.
 
-**Example:**
+**🗂️ Example:**
 
 ```javascript
 tpl.getUserData = new sqltt($ => ({
@@ -1622,7 +1683,7 @@ this case the replacement would be done inconditionally. But this could be
 helpful in case we want to manually enable/disable some tweaks without editing
 the actual SQL (just commenting in and out that hook).
 
-**Example:**
+**🗂️ Example:**
 
 ```javascript
         // If we wanted to apply this hook to all engines:
@@ -1642,7 +1703,7 @@ If it is impossible or unreasonable to use the same sql structure for some
 database engines, *sqltt* allows to specify a completely different sql source
 for given database through *altsql* property.
 
-**Example:**
+**🗂️ Example:**
 
 ```javascript
 tpl.someQuery = new sqltt({
@@ -1674,7 +1735,7 @@ concatenated at the end.
 This is useful to add simple clauses such as ``limit``, ``order by`` or ``group by``
 from our application logic.
 
-**Example:**
+**🗂️ Example:**
 
 ```javascript
 const myQuery = require('path/to/myQuery.sql.js')
