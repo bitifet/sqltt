@@ -49,6 +49,16 @@ function h_args(src, args) { // Tpl, argsObj to argsArr{{{
     const q = new sqltt(src);
     return q.args(args);
 };//}}}
+function h_mutation(d0, ...mutt) {//{{{
+    const q = new sqltt({
+        data: d0,
+        sql: "s foo f bar",
+    });
+    const m = q.mutation(...mutt);
+    const data0 = q.getSource().data;
+    const data1 = m.getSource().data;
+    return {data0, data1};
+};//}}}
 
 var m; // Just temporary message holder
 
@@ -263,6 +273,78 @@ describe('sqltt class', function() {
             }//}}}
 
         });
+
+
+        it ('.mutation()', function() {
+
+            { m = "No mutations"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: "b"})
+                    , {
+                        data0: { a: "a", b: "b" },
+                        data1: { a: "a", b: "b" },
+                    }
+                    , m
+                );
+            }//}}}
+
+            { m = "Cherry pick"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: "b"}, {b: 1, c: 2})
+                    , {
+                        data0: { a: "a", b: "b" },
+                        data1: { a: "a", b: 1, c: 2 },
+                    }
+                    , m
+                );
+            }//}}}
+
+            { m = "Multiple mutations"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: "b"}, {b: 1, c: 2}, {c: null})
+                    , {
+                        data0: { a: "a", b: "b" },
+                        data1: { a: "a", b: 1 },
+                    }
+                    , m
+                );
+            }//}}}
+
+            { m = "Global reset with null"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: "b"}, null)
+                    , {
+                        data0: { a: "a", b: "b" },
+                        data1: {},
+                    }
+                    , m
+                );
+            }//}}}
+
+            { m = "More data after global reset"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: "b"}, null, {nums: [1, 2, 3]})
+                    , {
+                        data0: { a: "a", b: "b" },
+                        data1: {nums: [1, 2, 3]},
+                    }
+                    , m
+                );
+            }//}}}
+
+            { m = "Array pushes"//{{{
+                assert.deepStrictEqual(
+                    h_mutation({a: "a", b: [1, 2, 3]}, {b: [4, 5, 6]})
+                    , {
+                        data0: { a: "a", b: [1, 2, 3] },
+                        data1: { a: "a", b: [1, 2, 3, 4, 5, 6] },
+                    }
+                    , m
+                );
+            }//}}}
+
+        });
+
 
     });
 
