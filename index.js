@@ -18,8 +18,7 @@ function sqltt(sourceTpl, options = {}) {
         ([k,v])=>me[_priv_][k]=v.bind(me)
     );
     me[_priv_].loadTemplate(sourceTpl);
-    me[_priv_].checkTemplate();
-    me.sqlCache = {};
+    me[_priv_].sqlCache = {};
 };
 
 // Public methods:
