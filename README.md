@@ -389,6 +389,8 @@ Table of Contents
             * [7. Even more functionality](#7-even-more-functionality)
             * [8. Update documentation](#8-update-documentation)
         * [Implement CTE "dependency" system](#implement-cte-dependency-system)
+            * [DONE:](#done)
+            * [TO-DO:](#to-do)
         * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
@@ -788,32 +790,37 @@ Remember to consider examples for GraphQL APIs implementations.
 
 #### Implement CTE "dependency" system
 
-<!-- {{{ -->
+<!-- {{{ --> (ALMOST DONE)
 
-  * Add new optional attribute 'cte' to the template soure specification for
+##### DONE: 
+
+  * Added new optional attribute 'WITH' to the template soure specification for
     Common Table Expressions ("with" clause).
 
-  * This will accept any of the following:
-    - A {key: value} object of accepting same values that accepts $.include()
-      method.
-    - An array of the same kind of values.
-    - Single item of the same type.
+  * It accepts a {key: value} object of accepting same values that accepts
+    $.include() method.
 
-  * It will be considered as CTE's to be prepended to the actual query.
+  * They are considered as CTE's to be prepended to the actual query.
     - In case of {key: value} object, each key will be used as CTE alias.
     - Otherwise, *alias* attribute will be mandatory for resolved SQLTT instance.
 
-  * CTEs will be processed recursively. That is: In case a CTE have its own
-    CTE's, they will be flattened to the parent query CTE block.
+  * They're processed recursively. That is: In case a CTE have its own CTE's,
+    they will be flattened to the parent query CTE block.
     - In case of a CTE having a CTE with the same alias as already added CTE,
-      it will be checked to be the same object and will be added single time.
-    - ...otherwise (same alias but not same object) en error will be thrown.
+      it is checked to be the same object and added single time.
+    - ...otherwise (same alias but not same object) an error is thrown.
+
+##### TO-DO:
+
+  * Also accept any of the following (template 'name' attribute would be
+    mandatory too in this case):
+    - An array of the same kind of values.
+    - Single item of the same type.
 
   * CTEs from an $.include()'d query won't be flattened (except internally to
     its own subctes) so aliases won't also collide.
-
-  * DO NOT name it 'cte': 'with' would be more appropriate and widely
-    understandable.
+    - Nowadays $.include()ing queryes with CTE is not suported and throws an
+      error.
 
 <!-- }}} -->
 
