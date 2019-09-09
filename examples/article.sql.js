@@ -7,7 +7,7 @@ const sqltt = require("../"); // sqltt
 // Define multiple named query templates.
 const q = {};
 
-q.list = new sqltt({
+q.list = new sqltt({//{{{
     data: {
         columns: ["id", "sectionName", "title"],
     },
@@ -21,20 +21,28 @@ q.list = new sqltt({
         join sections using(sectionId)
         ${$.entries($.data("filters"), "and", "where")}
     `, /* @@/sql@@ */
-})
+})//}}}
 
-q.show = new sqltt( /* @@sql@@ */ $=>$`
+
+q.mlist = q.list.mutation({
+    columns: ["manolo"],
+});
+
+
+q.show = new sqltt(//{{{
+    /* @@sql@@ */ $=>$`
     select id, sectionName, title, body
     from articles
     join sections using(sectionId)
     where id = ${"id"}
-` /* @@/sql@@ */);
+    ` /* @@/sql@@ */
+);//}}}
 
 
-q.insert = new sqltt({
+q.insert = new sqltt({//{{{
     name: "ArticleInsert",
     description: "Perform an Insert.",
-    args: ["title", "body", "sectionId"],
+///    args: ["title", "body", "sectionId"],
     data: {
         columns: ['sectionId', 'title', 'body'],
     },
@@ -42,10 +50,10 @@ q.insert = new sqltt({
         insert into articles (${$.keys($.data('columns'))})
         ${$.values($.data('columns'), ', ', "values (%)")}
     `, /* @@/sql@@ */
-}, {debug: true});
+}, {debug: true});//}}}
 
 
-q.update = new sqltt({
+q.update = new sqltt({//{{{
     description: "Perform an update.",
     args: {
         "id": "Identifier",
@@ -60,7 +68,7 @@ q.update = new sqltt({
         update articles ${$.entries($.data('columns'), undefined, 'set')}
         where id = ${"id"}
     `, /* @@/sql@@ */
-});
+});//}}}
 
 sqltt.publish(module, q /*, {debug: true}*/);
 
