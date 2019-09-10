@@ -333,7 +333,7 @@ compile them using [SQLTT CLI capabilities](#executing-from-cli) with [*_nocli*
 engines](#query-output-inspection):
 
 
-**$ ``SQL_ENGINE=postgresql_nocli node personnel.sql.js listByDept oper``**
+**$ ``node --engine=postgresql_nocli personnel.sql.js listByDept oper``**
 
 ```sql
     select id, dptId, dptName, name, sex
@@ -399,6 +399,7 @@ Table of Contents
         * [Adding more Database Engines](#adding-more-database-engines)
     * [Engine Flavours and Targets](#engine-flavours-and-targets)
         * [SQL_ENGINE environment variable](#sql_engine-environment-variable)
+        * [--engine](#-engine)
 * [SETUP AND USAGE](#setup-and-usage)
     * [Package setup](#package-setup)
     * [Syntax](#syntax)
@@ -514,7 +515,8 @@ SQLTT-1.0.0 soon.
 
 #### Implement commmnd-line modifiers
 
-  * Implement --engine=eng_name to override SQL_ENGINE env. var.
+  * (DONE) Implement --engine=eng_name to override SQL_ENGINE env. var.
+    - "--<eng_name>" shorthands implementd too (i.e.: "--postgresql").
 
   * Implement --all to render all defined templates.
     - Precede each one with a comment showing its name.
@@ -850,7 +852,8 @@ FEATURES
     - Generate [database-specific CLI versions](#executing-queries) too.
       - PostgreSQL: ``myTpl.sql('postgresql_cli') // select [...] where baz = :baz``
       - Oracle: ``myTpl.sql('oracle_cli') // select [...] where BAZ = '&baz'``
-      - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQL_ENGINE env var defined``
+      - Auto: ``myTpl.sql('cli') // Use 'default_cli' unless SQL_ENGINE env var
+        defined`` or --engine=<eng_name> modifier used.
       - Or even simpler: Direct [call from command line](#executing-from-cli)
         if ['.publish()' method used](#publishmodule-tpl).
     - ...all with **single SQL template source**.
@@ -1004,13 +1007,20 @@ by default, but it can be overridden by 'SQL_ENGINE' environment variable
 (only if exactly 'cli' is specified).
 
 On the other hand, even when 'cli' or *someFlavour_cli* is specified, we can
-set *SQL_ENGINE* to 'nocli' or *semeFlavour_nocli* in order to override CLI
+set *SQL_ENGINE* to 'nocli' or *someFlavour_nocli* in order to override CLI
 engine of selected database flavour.
 
 This can be useful if we only want to visually inspect how our query will be
 served to our application through `.sql()` (or `.sql(flavour)`) method.
 
 <!-- }}} -->
+
+#### --engine
+
+Additionally, in cli-mode, `--engine=<engine_name>` or simply its shorhands
+`--<engine_name>` can be used to override *SQL_ENGINE* environment variable or
+simply as a more handy way to select it.
+
 
 SETUP AND USAGE
 ---------------
@@ -1278,6 +1288,11 @@ engine flavour when we are going to generate SQL from *CLI*, we can set the
 
   b) Setting just for single execution (Ex.: ``SQL_ENGINE=oracle node
       myTpl.sql.js ...``).
+
+Lastly, *SQL_ENGINE* can be overridden by `--engine=<eng_name>` modifier or any
+of its per-engine shorthands (`--<eng_name>`) such as `--postgresql`,
+`--oracle_noci`, etc...
+
 
 <!-- }}} -->
 
@@ -1636,6 +1651,7 @@ tpl.getUserData = new sqltt($ => ({
       - ``node myTpl.sql.js`` outputs general cli output.
       - ``SQL_ENGINE=postgresql node myTpl.sql.js`` outputs postgresql
         flavoured CLI output.
+      - ... or simply ``node --postgresql myTpl.sql.js``.
     - If myTpl is a *key: value* object instead, first argument is expected to
       select which query is required.
       - Ex.: ``node myTplLib.sql.js listQuery``
