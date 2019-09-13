@@ -274,6 +274,12 @@ describe('sqltt class', function() {
 
         });
 
+        // it ('.entries() - TO-DO... -', function() {
+        //
+        //      * Check that boolean true (to use key instead) works.
+        //      // ....
+        //
+        // });
 
         it ('.mutation()', function() {
 
