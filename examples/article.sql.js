@@ -16,7 +16,7 @@ q.list = new sqltt({//{{{
         bySection: {filters: ["sectionId"]},
     },
     sql: /* @@sql@@ */ $=>$`
-        select ${$.data("columns")}
+        select ${$.keys($.data("columns"))}
         from articles
         join sections using(sectionId)
         ${$.entries($.data("filters"), "and", "where")}
