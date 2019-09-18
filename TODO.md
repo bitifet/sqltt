@@ -4,6 +4,12 @@ TO-DO list & notes
 TO-DO
 -----
 
+  * Implement execution wrapper and logging capabiliteis
+    - Implement a method in template API to provide a callback for query
+      execution.
+    - Implement logging capabilities. Not only for input arguments but also to
+      log execution times that exceeds specified threshold for example.
+
   * Provide an option to decide, in cli output, whether non specified arguments
     will default to empty strings or its *set* commands not rendered at all (in
     order to respect previously setted values).
