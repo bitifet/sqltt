@@ -392,6 +392,7 @@ Table of Contents
             * [DONE:](#done)
             * [TO-DO:](#to-do)
         * [Add .options() methods to .publish() exports](#add-options-methods-to-publish-exports)
+        * [Auto-name queries in multiquery files](#auto-name-queries-in-multiquery-files)
 * [FEATURES](#features)
 * [BASIC CONCEPTS](#basic-concepts)
     * [Engines](#engines)
@@ -834,6 +835,12 @@ Remember to consider examples for GraphQL APIs implementations.
   * It will let to globally alter default options.
   (Not strictly necessary for 1.0.0, but maybe...)
 <!-- }}} -->
+
+#### Auto-name queries in multiquery files
+
+Modify publish() static method so that unnamed templates get automatically
+named by its key in the object being published.
+
 
 
 FEATURES
