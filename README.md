@@ -377,6 +377,7 @@ Table of Contents
 * [ABOUT SQLTT](#about-sqltt)
     * [About this prerelease](#about-this-prerelease)
     * [Release TODO](#release-todo)
+        * [Fix .concat(), .limit() and .wrap() through wrapping engines](#fix-concat-limit-and-wrap-through-wrapping-engines)
         * [Implement commmnd-line modifiers](#implement-commmnd-line-modifiers)
         * [Implement Mutable Queries](#implement-mutable-queries)
             * [1. Implement .data(key) Tag API method](#1-implement-datakey-tag-api-method)
@@ -513,6 +514,19 @@ SQLTT-1.0.0 soon.
 
 
 ### Release TODO
+
+#### Fix .concat(), .limit() and .wrap() through wrapping engines
+
+``.concat()``, ``.limit()`` and ``.wrap()`` all wraps the output of original
+.sql() method call.
+
+This is wrong when engines, such as oracle, provide their own wrapping
+(resulting in an inverse wrapping order).
+
+I.E. (from CLI) ``$ node myTpl.sql.js someQuery --oracle --limit 10`` would now
+output ``select foo from bar; LIMIT 10`` instead of ``select foo from bar LIMIT
+10;``
+
 
 #### Implement commmnd-line modifiers
 
